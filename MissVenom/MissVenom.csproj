@@ -7,7 +7,7 @@
     <ProjectGuid>{30AE5B75-AE56-4D28-A6C7-320CFAB1796E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WindowsFormsApplication1</RootNamespace>
+    <RootNamespace>MissVenom</RootNamespace>
     <AssemblyName>MissVenom</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -32,6 +32,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>venom.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -208,7 +211,9 @@
     <EmbeddedResource Include="server.pfx" />
     <None Include="WebServer\httpserver.snk" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="venom.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
