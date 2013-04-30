@@ -30,12 +30,25 @@ namespace WindowsFormsApplication1
             InitializeComponent();
             
             var certificate = new X509Certificate2(this.getCertificate(), "banana");
-            //certificate.PrivateKey = getPrivateKey();
-            var listener = (SecureHttpListener)HttpServer.HttpListener.Create(IPAddress.Any, 443, certificate);
-            listener.UseClientCertificate = true;
-            listener.RequestReceived += OnRequest;
-            listener.Start(5);
-            this.AddListItem("Listening...");
+            try
+            {
+                var listener = (SecureHttpListener)HttpServer.HttpListener.Create(IPAddress.Any, 443, certificate);
+                listener.UseClientCertificate = true;
+                listener.RequestReceived += OnRequest;
+                listener.Start(5);
+                this.AddListItem("Listening...");
+            }
+            catch (System.Net.Sockets.SocketException e)
+            {
+                this.AddListItem("SOCKET ERROR");
+                this.AddListItem("Make sure port 443 is not in use");
+                this.AddListItem(e.Message);
+            }
+            catch (Exception e)
+            {
+                this.AddListItem("GENERAL ERROR");
+                this.AddListItem(e.Message);
+            }
             this.AddListItem(" ");
         }
 
