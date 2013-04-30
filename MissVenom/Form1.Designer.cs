@@ -1,4 +1,4 @@
-﻿namespace WindowsFormsApplication1
+﻿namespace MissVenom
 {
     partial class Form1
     {
