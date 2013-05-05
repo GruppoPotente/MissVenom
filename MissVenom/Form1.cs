@@ -84,6 +84,7 @@ namespace MissVenom
 
             e.Response.Body.Write(data2, 0, data2.Length);
 
+            this.AddListItem("USERAGENT:" + e.Request.Headers["User-Agent"].HeaderValue); 
             this.AddListItem("REQUEST:  " + e.Request.Uri.AbsoluteUri);
             this.AddListItem("RESPONSE: " + data);
             this.AddListItem(" ");
