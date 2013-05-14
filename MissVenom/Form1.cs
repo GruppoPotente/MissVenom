@@ -1,4 +1,5 @@
-﻿using HttpServer;
+﻿using ARSoft.Tools.Net.Dns;
+using HttpServer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,6 +11,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,10 +27,25 @@ namespace MissVenom
             return bytes;
         }
 
+        //protected void startDnsServer()
+        //{
+
+        //}
+
         public Form1()
         {
             InitializeComponent();
             
+            // TODO!
+            //start DNS server
+            //Thread srv = new Thread(new ThreadStart(startDnsServer));
+            //srv.IsBackground = true;
+            //srv.Start();
+            ///DnsServer srv = new DnsServer(IPAddress.Any, 10, 10, ProcessQuery);
+            ///srv.Start();
+
+
+            //start HTTPS server
             var certificate = new X509Certificate2(this.getCertificate(), "banana");
             try
             {
@@ -54,6 +71,37 @@ namespace MissVenom
 
         delegate void AddListItemCallback(String text);
 
+        static DnsMessageBase ProcessQuery(DnsMessageBase message, IPAddress clientAddress, ARSoft.Tools.Net.Dns.KeyRecordBase.ProtocolType protocol)
+        {
+            message.IsQuery = false;
+
+            DnsMessage query = message as DnsMessage;
+
+            if (query != null && query.Questions.Count == 1)
+            {
+                DnsQuestion question = query.Questions[0];
+                DnsMessage answer = DnsClient.Default.Resolve(question.Name, question.RecordType, question.RecordClass);
+
+                if (answer != null)
+                {
+                    foreach (DnsRecordBase record in answer.AnswerRecords)
+                    {
+                        query.AnswerRecords.Add(record);
+                    }
+                    foreach (DnsRecordBase record in answer.AdditionalRecords)
+                    {
+                        query.AnswerRecords.Add(record);
+                    }
+
+                    query.ReturnCode = ReturnCode.NoError;
+                    return query;
+                }
+            }
+
+            message.ReturnCode = ReturnCode.ServerFailure;
+            return message;
+        }
+
         private void AddListItem(String data)
         {
             if (this.textBox1.InvokeRequired)
@@ -72,6 +120,14 @@ namespace MissVenom
         {
             String url = "https://v.whatsapp.net" + e.Request.Uri.PathAndQuery;
             HttpWebRequest request = HttpWebRequest.Create(url) as HttpWebRequest;
+            try
+            {
+                request.UserAgent = e.Request.Headers["User-Agent"].HeaderValue;
+            }
+            catch (Exception ex)
+            {
+                this.AddListItem("Warning: " + ex.Message);
+            }
             HttpWebResponse response = request.GetResponse() as HttpWebResponse;
             e.Response.ContentType.Value = response.ContentType;
             e.Response.ContentLength.Value = response.ContentLength;
