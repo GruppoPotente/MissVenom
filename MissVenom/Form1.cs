@@ -51,6 +51,14 @@ namespace MissVenom
                 return;
             }
 
+            string[] ips = this.GetAllIPs();
+            if (ips.Length > 1)
+            {
+                this.AddListItem("WARNING: Multiple IP addresses found: " + String.Join(" ,", ips));
+            }
+
+            this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS)");
+            
             //start DNS server
             Thread srv = new Thread(new ThreadStart(startDnsServer));
             srv.IsBackground = true;
@@ -139,6 +147,22 @@ namespace MissVenom
                 }
             }
             return localIP;
+        }
+
+        public string[] GetAllIPs()
+        {
+            List<string> res = new List<string>();
+            IPHostEntry host;
+            IPAddress localIP = null;
+            host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    res.Add(ip.ToString());
+                }
+            }
+            return res.ToArray();
         }
 
         static DnsMessageBase processQuery(DnsMessageBase message, IPAddress clientAddress, ProtocolType protocol)
