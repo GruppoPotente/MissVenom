@@ -16,9 +16,9 @@ Usage:
 - Make sure your mobile device is on the same subnet as your machine
 - Install server.crt as trusted root certificate on your mobile device
 - Unregister WhatsApp app (e.g. wipe app data)
-- Set DNS address on your phone to your computer's IP address (in WiFi->Static IP configuration)
-- **Reboot phone to clear DNS cache before proceeding**
 - Start MissVenom.exe
+- Set DNS address on your phone to the displayed IP address (in WiFi->Static IP configuration)
+- **Reboot phone to clear DNS cache before proceeding**
 - Register WhatsApp on your device
 - Your identity and password will appear in MissVenom
 
