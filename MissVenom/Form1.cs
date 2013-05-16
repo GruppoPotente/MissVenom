@@ -1,4 +1,5 @@
-﻿using HttpServer;
+﻿using ARSoft.Tools.Net.Dns;
+using HttpServer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,6 +8,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -26,23 +28,27 @@ namespace MissVenom
             return bytes;
         }
 
-        //protected void startDnsServer()
-        //{
-
-        //}
+        protected void startDnsServer()
+        {
+            try
+            {
+                DnsServer server = new DnsServer(IPAddress.Any, 10, 10, processQuery);
+                server.Start();
+            }
+            catch (Exception e)
+            {
+                this.AddListItem("ERROR STARTING DNS SERVER: " + e.Message);
+            }
+        }
 
         public Form1()
         {
             InitializeComponent();
-            
-            // TODO!
-            //start DNS server
-            //Thread srv = new Thread(new ThreadStart(startDnsServer));
-            //srv.IsBackground = true;
-            //srv.Start();
-            ///DnsServer srv = new DnsServer(IPAddress.Any, 10, 10, ProcessQuery);
-            ///srv.Start();
 
+            //start DNS server
+            Thread srv = new Thread(new ThreadStart(startDnsServer));
+            srv.IsBackground = true;
+            srv.Start();
 
             //start HTTPS server
             var certificate = new X509Certificate2(this.getCertificate(), "banana");
@@ -108,10 +114,73 @@ namespace MissVenom
 
             e.Response.Body.Write(data2, 0, data2.Length);
 
-            this.AddListItem("USERAGENT:" + e.Request.Headers["User-Agent"].HeaderValue); 
+            this.AddListItem("USERAGENT:" + e.Request.Headers["User-Agent"].HeaderValue);
             this.AddListItem("REQUEST:  " + e.Request.Uri.AbsoluteUri);
             this.AddListItem("RESPONSE: " + data);
             this.AddListItem(" ");
+        }
+
+        static string GetIP()
+        {
+            IPHostEntry host;
+            string localIP = "?";
+            host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    localIP = ip.ToString();
+                }
+            }
+            return localIP;
+        }
+
+        static DnsMessageBase processQuery(DnsMessageBase message, IPAddress clientAddress, ProtocolType protocol)
+        {
+            message.IsQuery = false;
+
+            DnsMessage query = message as DnsMessage;
+            DnsMessage answer = null;
+
+            if ((query != null) && (query.Questions.Count == 1))
+            {
+                //HOOK:
+                //resolve v.whatsapp.net
+                if (query.Questions[0].RecordType == RecordType.Txt
+                    &&
+                    query.Questions[0].Name.Equals("v.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)
+                )
+                {
+                    query.ReturnCode = ReturnCode.NoError;
+                    query.AnswerRecords.Add(new TxtRecord("v.whatsapp.net", 30, GetIP()));
+                    return query;
+                }
+                else
+                {
+                    // send query to upstream server
+                    DnsQuestion question = query.Questions[0];
+                    answer = DnsClient.Default.Resolve(question.Name, question.RecordType, question.RecordClass);
+                }
+
+                // if got an answer, copy it to the message sent to the client
+                if (answer != null)
+                {
+                    foreach (DnsRecordBase record in (answer.AnswerRecords))
+                    {
+                        query.AnswerRecords.Add(record);
+                    }
+                    foreach (DnsRecordBase record in (answer.AdditionalRecords))
+                    {
+                        query.AnswerRecords.Add(record);
+                    }
+
+                    query.ReturnCode = ReturnCode.NoError;
+                    return query;
+                }
+            }
+            // Not a valid query or upstream server did not answer correct
+            message.ReturnCode = ReturnCode.ServerFailure;
+            return message;
         }
     }
 }
