@@ -32,13 +32,22 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>venom.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>MissVenom.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ARSoft.Tools.Net">
-      <HintPath>..\ARSoft.Tools.Net.dll</HintPath>
+      <HintPath>Libraries\ARSoft.Tools.Net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="HttpServer">
+      <HintPath>Libraries\HttpServer.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -53,6 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Context.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -61,137 +71,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WebServer\ArrayParameterCollection.cs" />
-    <Compile Include="WebServer\AuthenticationRequiredException.cs" />
-    <Compile Include="WebServer\Authentication\AuthenticationProvider.cs" />
-    <Compile Include="WebServer\Authentication\BasicAuthentication.cs" />
-    <Compile Include="WebServer\Authentication\DigestAuthentication.cs" />
-    <Compile Include="WebServer\Authentication\IAuthenticationProvider.cs" />
-    <Compile Include="WebServer\Authentication\IAuthenticator.cs" />
-    <Compile Include="WebServer\Authentication\IUserProvider.cs" />
-    <Compile Include="WebServer\BadRequestException.cs" />
-    <Compile Include="WebServer\BodyDecoders\BodyDecoderCollection.cs" />
-    <Compile Include="WebServer\BodyDecoders\DecodedData.cs" />
-    <Compile Include="WebServer\BodyDecoders\IBodyDecoder.cs" />
-    <Compile Include="WebServer\BodyDecoders\Mono\HttpMultiPart.cs" />
-    <Compile Include="WebServer\BodyDecoders\Mono\StrUtils.cs" />
-    <Compile Include="WebServer\BodyDecoders\MultiPartDecoder.cs" />
-    <Compile Include="WebServer\BodyDecoders\UrlDecoder.cs" />
-    <Compile Include="WebServer\ComponentAttribute.cs" />
-    <Compile Include="WebServer\ContentTypeHelper.cs" />
-    <Compile Include="WebServer\ErrorPageEventArgs.cs" />
-    <Compile Include="WebServer\ExceptionEventArgs.cs" />
-    <Compile Include="WebServer\ForbiddenException.cs" />
-    <Compile Include="WebServer\Headers\AuthorizationHeader.cs" />
-    <Compile Include="WebServer\Headers\CacheControl.cs" />
-    <Compile Include="WebServer\Headers\ConnectionHeader.cs" />
-    <Compile Include="WebServer\Headers\ContentTypeHeader.cs" />
-    <Compile Include="WebServer\Headers\CookieHeader.cs" />
-    <Compile Include="WebServer\Headers\DateHeader.cs" />
-    <Compile Include="WebServer\Headers\HeaderCollection.cs" />
-    <Compile Include="WebServer\Headers\HeaderFactory.cs" />
-    <Compile Include="WebServer\Headers\HeaderParameterCollection.cs" />
-    <Compile Include="WebServer\Headers\IHeader.cs" />
-    <Compile Include="WebServer\Headers\IHeaderCollection.cs" />
-    <Compile Include="WebServer\Headers\NumericHeader.cs" />
-    <Compile Include="WebServer\Headers\Parsers\AuthorizationParser.cs" />
-    <Compile Include="WebServer\Headers\Parsers\ConnectionParser.cs" />
-    <Compile Include="WebServer\Headers\Parsers\ContentTypeParser.cs" />
-    <Compile Include="WebServer\Headers\Parsers\CookieParser.cs" />
-    <Compile Include="WebServer\Headers\Parsers\DateParser.cs" />
-    <Compile Include="WebServer\Headers\Parsers\IHeaderParser.cs" />
-    <Compile Include="WebServer\Headers\Parsers\NumericHeaderParser.cs" />
-    <Compile Include="WebServer\Headers\Parsers\ParserForAttribute.cs" />
-    <Compile Include="WebServer\Headers\Parsers\StringParser.cs" />
-    <Compile Include="WebServer\Headers\StringHeader.cs" />
-    <Compile Include="WebServer\Helpers\PropertyAssigner.cs" />
-    <Compile Include="WebServer\HttpContext.cs" />
-    <Compile Include="WebServer\HttpException.cs" />
-    <Compile Include="WebServer\HttpFactory.cs" />
-    <Compile Include="WebServer\HttpFile.cs" />
-    <Compile Include="WebServer\HttpFileCollection.cs" />
-    <Compile Include="WebServer\HttpListener.cs" />
-    <Compile Include="WebServer\IHttpContext.cs" />
-    <Compile Include="WebServer\IHttpFactory.cs" />
-    <Compile Include="WebServer\IHttpListener.cs" />
-    <Compile Include="WebServer\IMessage.cs" />
-    <Compile Include="WebServer\InternalServerException.cs" />
-    <Compile Include="WebServer\IParameterCollection.cs" />
-    <Compile Include="WebServer\IRequest.cs" />
-    <Compile Include="WebServer\IResponse.cs" />
-    <Compile Include="WebServer\IServiceResolver.cs" />
-    <Compile Include="WebServer\Logging\ConsoleLogFactory.cs" />
-    <Compile Include="WebServer\Logging\ConsoleLogger.cs" />
-    <Compile Include="WebServer\Logging\ILogFactory.cs" />
-    <Compile Include="WebServer\Logging\ILogFilter.cs" />
-    <Compile Include="WebServer\Logging\ILogger.cs" />
-    <Compile Include="WebServer\Logging\LogFactory.cs" />
-    <Compile Include="WebServer\Logging\LogFilter.cs" />
-    <Compile Include="WebServer\Logging\LogLevel.cs" />
-    <Compile Include="WebServer\Logging\NullLogFactory.cs" />
-    <Compile Include="WebServer\Logging\NullLogWriter.cs" />
-    <Compile Include="WebServer\Messages\FactoryRequestEventArgs.cs" />
-    <Compile Include="WebServer\Messages\MessageFactory.cs" />
-    <Compile Include="WebServer\Messages\MessageFactoryContext.cs" />
-    <Compile Include="WebServer\Messages\Parser\BodyEventArgs.cs" />
-    <Compile Include="WebServer\Messages\Parser\FactoryResponseEventArgs.cs" />
-    <Compile Include="WebServer\Messages\Parser\HeaderEventArgs.cs" />
-    <Compile Include="WebServer\Messages\Parser\HttpParser.cs" />
-    <Compile Include="WebServer\Messages\Parser\ParserException.cs" />
-    <Compile Include="WebServer\Messages\Parser\RequestEventArgs.cs" />
-    <Compile Include="WebServer\Messages\Parser\RequestLineEventArgs.cs" />
-    <Compile Include="WebServer\Messages\Parser\ResponseLineEventArgs.cs" />
-    <Compile Include="WebServer\Messages\Request.cs" />
-    <Compile Include="WebServer\Messages\RequestCookie.cs" />
-    <Compile Include="WebServer\Messages\RequestCookiesCollection.cs" />
-    <Compile Include="WebServer\Messages\Response.cs" />
-    <Compile Include="WebServer\Messages\ResponseCookie.cs" />
-    <Compile Include="WebServer\Messages\ResponseCookieCollection.cs" />
-    <Compile Include="WebServer\Messages\ResponseWriter.cs" />
-    <Compile Include="WebServer\Method.cs" />
-    <Compile Include="WebServer\Modules\FileModule.cs" />
-    <Compile Include="WebServer\Modules\IModule.cs" />
-    <Compile Include="WebServer\NotFoundException.cs" />
-    <Compile Include="WebServer\ParameterCollection.cs" />
-    <Compile Include="WebServer\ProcessingResult.cs" />
-    <Compile Include="WebServer\RequestContext.cs" />
-    <Compile Include="WebServer\RequestEventArgs.cs" />
-    <Compile Include="WebServer\Resources\EmbeddedResourceLoader.cs" />
-    <Compile Include="WebServer\Resources\FileResources.cs" />
-    <Compile Include="WebServer\Resources\IResourceLoader.cs" />
-    <Compile Include="WebServer\Resources\IResourceProvider.cs" />
-    <Compile Include="WebServer\Resources\Resource.cs" />
-    <Compile Include="WebServer\Resources\ResourceProvider.cs" />
-    <Compile Include="WebServer\Routing\IRouter.cs" />
-    <Compile Include="WebServer\Routing\RegExRouter.cs" />
-    <Compile Include="WebServer\Routing\SimpleRouter.cs" />
-    <Compile Include="WebServer\SecureHttpContext.cs" />
-    <Compile Include="WebServer\SecureHttpListener.cs" />
-    <Compile Include="WebServer\Server.cs" />
-    <Compile Include="WebServer\Sessions\ISessionProvider.cs" />
-    <Compile Include="WebServer\Sessions\ISessionStore.cs" />
-    <Compile Include="WebServer\Sessions\Session.cs" />
-    <Compile Include="WebServer\Sessions\SessionFileStore.cs" />
-    <Compile Include="WebServer\Sessions\SessionProvider.cs" />
-    <Compile Include="WebServer\SimpleServer.cs" />
-    <Compile Include="WebServer\SocketFilterEventArgs.cs" />
-    <Compile Include="WebServer\Tools\BufferReader.cs" />
-    <Compile Include="WebServer\Tools\ITextReader.cs" />
-    <Compile Include="WebServer\Tools\ObjectPool.cs" />
-    <Compile Include="WebServer\Tools\Properties\CachedProperty.cs" />
-    <Compile Include="WebServer\Tools\Properties\EmitHelper.cs" />
-    <Compile Include="WebServer\Tools\Properties\EmitReflector.cs" />
-    <Compile Include="WebServer\Tools\Properties\PropertyProvider.cs" />
-    <Compile Include="WebServer\Tools\Session.cs" />
-    <Compile Include="WebServer\Tools\SessionProvider.cs" />
-    <Compile Include="WebServer\Tools\StringReader.cs" />
-    <Compile Include="WebServer\Tools\UrlParser.cs" />
-    <Compile Include="WebServer\Transports\ClientCertificate.cs" />
-    <Compile Include="WebServer\Transports\ResusableNetworkStream.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Libraries\ARSoft.Tools.Net.dll" />
+    <EmbeddedResource Include="Libraries\HttpServer.dll" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -212,7 +97,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <EmbeddedResource Include="server.pfx" />
-    <None Include="WebServer\httpserver.snk" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="venom.ico" />

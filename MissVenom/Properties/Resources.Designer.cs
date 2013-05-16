@@ -59,5 +59,25 @@ namespace MissVenom.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] ARSoft_Tools_Net {
+            get {
+                object obj = ResourceManager.GetObject("ARSoft_Tools_Net", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] HttpServer {
+            get {
+                object obj = ResourceManager.GetObject("HttpServer", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }
