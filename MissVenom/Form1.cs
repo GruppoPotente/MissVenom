@@ -11,17 +11,25 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WhatsAppApi.Helper;
 
 namespace MissVenom
 {
     public partial class Form1 : Form
     {
         const int PacketBufferSize = 65536;
+        private BinTreeNodeReader reader;
+        private List<IncompleteMessageException> incompleteMessage = new List<IncompleteMessageException>();
+        private byte[] PacketBuffer = new byte[PacketBufferSize];
+        private string targetIP;
+        private string password;
+        private byte[] _encryptionKey;
 
         public static string resolveHost(string hostname)
         {
@@ -92,7 +100,6 @@ namespace MissVenom
                 IPEndPoint src = new IPEndPoint(GetIP(), 5222);
                 IPEndPoint dst = new IPEndPoint(IPAddress.Parse(targethost), 5222);
                 this.AddListItem("Started TCP sniffer...");
-                byte[] PacketBuffer = new byte[PacketBufferSize];
                 try
                 {
                     Socket tcpSocket = new Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Raw, System.Net.Sockets.ProtocolType.IP);
@@ -103,13 +110,13 @@ namespace MissVenom
                         tcpSocket.IOControl(unchecked((int)0x98000001), new byte[4] { 1, 0, 0, 0 }, new byte[4]);
                         while (true)
                         {
-                            System.IAsyncResult ar = tcpSocket.BeginReceive(PacketBuffer, 0, PacketBufferSize, System.Net.Sockets.SocketFlags.None, new System.AsyncCallback(CallReceive), this);
+                            System.IAsyncResult ar = tcpSocket.BeginReceive(this.PacketBuffer, 0, PacketBufferSize, System.Net.Sockets.SocketFlags.None, new System.AsyncCallback(CallReceive), this);
                             while (tcpSocket.Available == 0)
                             {
                                 System.Threading.Thread.Sleep(10);
                             }
                             int Size = tcpSocket.EndReceive(ar);
-                            ExtractBuffer(ref PacketBuffer);
+                            //ExtractBuffer(ref PacketBuffer, targethost);
                         }
                     }
                     finally
@@ -137,20 +144,22 @@ namespace MissVenom
 
         public virtual void CallReceive(System.IAsyncResult ar)
         {
-            //ExtractBuffer();
+            this.ExtractBuffer();
         }
 
-        protected void ExtractBuffer(ref byte[] PacketBuffer)
+        protected void ExtractBuffer()
         {
             IPPacket IP = new IPPacket(ref PacketBuffer);
             if (IP.TCP != null && (IP.TCP.DestinationPort == 5222 || IP.TCP.SourcePort == 5222) && IP.TCP.PacketData.Length > 0)
             {
-                string SourceAddress = IP.SourceAddress.ToString();
-                string DestinationAddress = IP.DestinationAddress.ToString();
-                //string Data = System.Text.RegularExpressions.Regex.Replace(System.Text.Encoding.ASCII.GetString(IP.TCP.PacketData), @"[^a-zA-Z_0-9\.\@\- ]", "");
-                string Data = WhatsAppApi.WhatsApp.SYSEncoding.GetString(IP.TCP.PacketData);
-
-                this.AddLogItem(IP.TCP.PacketData);
+                if (IP.SourceAddress.ToString() == this.targetIP)
+                {
+                    this.AddLogItem(IP.TCP.PacketData, false);
+                }
+                else
+                {
+                    this.AddLogItem(IP.TCP.PacketData, true);
+                }
             }
         }
 
@@ -160,7 +169,7 @@ namespace MissVenom
         }
 
         delegate void AddListItemCallback(String text);
-        delegate void AddLogItemCallback(byte[] data);
+        delegate void AddLogItemCallback(byte[] data, bool toClient);
 
         private void AddListItem(String data)
         {
@@ -176,17 +185,56 @@ namespace MissVenom
             }
         }
 
-        private void AddLogItem(byte[] data)
+        private void AddLogItem(byte[] data, bool toClient)
         {
             if (this.textBox1.InvokeRequired)
             {
                 AddLogItemCallback a = new AddLogItemCallback(AddLogItem);
-                this.Invoke(a, new object[] { data });
+                this.Invoke(a, new object[] { data, toClient });
             }
             else
             {
-                string strout = WhatsAppApi.WhatsApp.SYSEncoding.GetString(data);
-                File.AppendAllLines("log.txt", new string[] {strout});
+                string prefix;
+                if (toClient)
+                {
+                    prefix = "rx";
+                }
+                else
+                {
+                    prefix = "tx";
+                }
+                try
+                {
+                    try
+                    {
+                        ProtocolTreeNode node = this.reader.nextTree(data);
+                        while (node != null)
+                        {
+                            //look for challenge key
+                            if (node.tag == "challenge")
+                            {
+                                byte[] challengeBytes = node.data;
+                                byte[] rawPass = Convert.FromBase64String(this.password);
+                                Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(rawPass, challengeBytes, 16);
+                                this._encryptionKey = r.GetBytes(20);
+                                this.reader.Encryptionkey = _encryptionKey;
+                            }
+
+                            File.AppendAllLines("xmpp.log", new string[] { node.NodeString(prefix) });
+                            node = this.reader.nextTree();
+                        }
+                    }
+                    catch (IncompleteMessageException inc)
+                    {
+                        //this.incompleteMessage.Add(inc);
+                    }
+                    catch (Exception ex)
+                    {
+                        //this.AddListItem(ex.Message);
+                    }
+                }
+                catch (Exception e)
+                { }
             }
         }
 
@@ -301,8 +349,14 @@ namespace MissVenom
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            string[] dict = DecodeHelper.getDictionary();
+            this.reader = new BinTreeNodeReader(dict);
+
+            
+
             this.SetRegIpForward();
-            if (GetIP() == null)
+            this.targetIP = GetIP().ToString();
+            if (String.IsNullOrEmpty(this.targetIP))
             {
                 this.AddListItem("DNS ERROR: Could not find your local IP address");
                 return;
