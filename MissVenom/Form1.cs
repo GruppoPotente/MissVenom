@@ -349,10 +349,17 @@ namespace MissVenom
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.password = this.textBox2.Text;
+            this.textBox2.Enabled = false;
+            this.button1.Enabled = false;
+
             string[] dict = DecodeHelper.getDictionary();
             this.reader = new BinTreeNodeReader(dict);
-
-            
 
             this.SetRegIpForward();
             this.targetIP = GetIP().ToString();
