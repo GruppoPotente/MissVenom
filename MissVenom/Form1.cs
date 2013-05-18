@@ -1,6 +1,8 @@
 ﻿using ARSoft.Tools.Net.Dns;
 using HttpServer;
 using Microsoft.Win32;
+using PcapDotNet.Core;
+using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,6 +32,8 @@ namespace MissVenom
         private string targetIP;
         private string password;
         private byte[] _encryptionKey;
+        private List<byte> streamBuffer = new List<byte>();
+        private uint streamIndex = 0;
 
         public static string resolveHost(string hostname)
         {
@@ -82,63 +86,90 @@ namespace MissVenom
 
         protected void startTcpSniffer()
         {
-            try
+            bool derp = false;
+            if (derp)
             {
-
-            }
-            catch (Exception e)
-            {
-                this.AddListItem("TCP SNIFFER ERROR: " + e.Message);
-            }
-            try
-            {
-                string targethost = "50.22.231.45";// resolveHost("c.whatsapp.net");
-                if (string.IsNullOrEmpty(targethost))
-                {
-                    throw new Exception("Could not resolve host");
-                }
-                IPEndPoint src = new IPEndPoint(GetIP(), 5222);
-                IPEndPoint dst = new IPEndPoint(IPAddress.Parse(targethost), 5222);
-                this.AddListItem("Started TCP sniffer...");
                 try
                 {
-                    Socket tcpSocket = new Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Raw, System.Net.Sockets.ProtocolType.IP);
+                    string targethost = "50.22.231.45";// resolveHost("c.whatsapp.net");
+                    if (string.IsNullOrEmpty(targethost))
+                    {
+                        throw new Exception("Could not resolve host");
+                    }
+                    IPEndPoint src = new IPEndPoint(GetIP(), 5222);
+                    IPEndPoint dst = new IPEndPoint(IPAddress.Parse(targethost), 5222);
+                    this.AddListItem("Started TCP sniffer...");
                     try
                     {
-                        tcpSocket.Bind(src);
-                        tcpSocket.SetSocketOption(System.Net.Sockets.SocketOptionLevel.IP, System.Net.Sockets.SocketOptionName.HeaderIncluded, 1);
-                        tcpSocket.IOControl(unchecked((int)0x98000001), new byte[4] { 1, 0, 0, 0 }, new byte[4]);
-                        while (true)
+                        Socket tcpSocket = new Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Raw, System.Net.Sockets.ProtocolType.IP);
+                        try
                         {
-                            System.IAsyncResult ar = tcpSocket.BeginReceive(this.PacketBuffer, 0, PacketBufferSize, System.Net.Sockets.SocketFlags.None, new System.AsyncCallback(CallReceive), this);
-                            while (tcpSocket.Available == 0)
+                            tcpSocket.Bind(src);
+                            tcpSocket.SetSocketOption(System.Net.Sockets.SocketOptionLevel.IP, System.Net.Sockets.SocketOptionName.HeaderIncluded, 1);
+                            tcpSocket.IOControl(unchecked((int)0x98000001), new byte[4] { 1, 0, 0, 0 }, new byte[4]);
+                            while (true)
                             {
-                                System.Threading.Thread.Sleep(10);
+                                System.IAsyncResult ar = tcpSocket.BeginReceive(this.PacketBuffer, 0, PacketBufferSize, System.Net.Sockets.SocketFlags.None, new System.AsyncCallback(CallReceive), this);
+                                while (tcpSocket.Available == 0)
+                                {
+                                    System.Threading.Thread.Sleep(10);
+                                }
+                                int Size = tcpSocket.EndReceive(ar);
+                                //ExtractBuffer(ref PacketBuffer, targethost);
                             }
-                            int Size = tcpSocket.EndReceive(ar);
-                            //ExtractBuffer(ref PacketBuffer, targethost);
+                        }
+                        finally
+                        {
+                            if (tcpSocket != null)
+                            {
+                                tcpSocket.Shutdown(System.Net.Sockets.SocketShutdown.Both);
+                                tcpSocket.Close();
+                            }
                         }
                     }
                     finally
                     {
-                        if (tcpSocket != null)
-                        {
-                            tcpSocket.Shutdown(System.Net.Sockets.SocketShutdown.Both);
-                            tcpSocket.Close();
-                        }
                     }
                 }
-                finally
+                catch (System.Threading.ThreadAbortException)
                 {
+                    this.AddListItem("TCP SNIFFER: Thread aborted");
+                }
+                catch (System.Exception E)
+                {
+                    System.Windows.Forms.MessageBox.Show(E.ToString());
                 }
             }
-            catch (System.Threading.ThreadAbortException)
+            else
             {
-                this.AddListItem("TCP SNIFFER: Thread aborted");
-            }
-            catch (System.Exception E)
-            {
-                System.Windows.Forms.MessageBox.Show(E.ToString());
+                IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+                if (allDevices.Count == 0)
+                {
+                    this.AddListItem("No capture devices found");
+                    return;
+                }
+                if (allDevices.Count > 1)
+                {
+                    this.AddListItem("You have " + allDevices.Count + " devices");
+                    //show adapter selection dialog
+                    //todo
+                }
+
+                PacketDevice device = allDevices.First();
+
+                // Open the device
+                using (PacketCommunicator communicator =
+                    device.Open(65536,                                  // portion of the packet to capture
+                    // 65536 guarantees that the whole packet will be captured on all the link layers
+                                        PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
+                                        1000))                                  // read timeout
+                {
+                    BerkeleyPacketFilter filter = communicator.CreateFilter("port 5222 and dst " + GetIP().ToString());
+                    Console.WriteLine("Listening on " + device.Description + "...");
+                    communicator.SetFilter(filter);
+                    // start the capture
+                    communicator.ReceivePackets(0, PacketHandler);
+                }
             }
         }
 
@@ -161,6 +192,12 @@ namespace MissVenom
                     this.AddLogItem(IP.TCP.PacketData, true);
                 }
             }
+        }
+
+        // Callback function invoked by Pcap.Net for every incoming packet
+        private void PacketHandler(Packet packet)
+        {
+            this.AddLogItem(packet.IpV4.Tcp.Payload.ToArray<byte>(), true);
         }
 
         public Form1()
@@ -205,8 +242,21 @@ namespace MissVenom
                 }
                 try
                 {
+                    File.AppendAllLines("raw.log", new string[] { prefix + " " + WhatsAppApi.WhatsApp.SYSEncoding.GetString(data)});
                     try
                     {
+                        //if (this.incompleteMessage.Count > 0)
+                        //{
+                        //    List<byte> foo = new List<byte>();
+                        //    foreach (IncompleteMessageException exe in this.incompleteMessage)
+                        //    {
+                        //        foo.AddRange(exe.getInput());
+                        //    }
+                        //    this.incompleteMessage.Clear();
+                        //    foo.AddRange(data);
+                        //    data = foo.ToArray();
+                        //}
+
                         ProtocolTreeNode node = this.reader.nextTree(data);
                         while (node != null)
                         {
@@ -230,7 +280,7 @@ namespace MissVenom
                     }
                     catch (Exception ex)
                     {
-                        //this.AddListItem(ex.Message);
+                        this.AddListItem(ex.Message);
                     }
                 }
                 catch (Exception e)
@@ -275,7 +325,7 @@ namespace MissVenom
             host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (IPAddress ip in host.AddressList)
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
                     localIP = ip;
                 }
@@ -290,7 +340,7 @@ namespace MissVenom
             host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (IPAddress ip in host.AddressList)
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
                     res.Add(ip.ToString());
                 }

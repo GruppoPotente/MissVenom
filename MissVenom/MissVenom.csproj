@@ -103,6 +103,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sniff\Capture.cs" />
     <Compile Include="Sniff\ip.cs" />
     <Compile Include="Sniff\tcp.cs" />
     <EmbeddedResource Include="Form1.resx">
