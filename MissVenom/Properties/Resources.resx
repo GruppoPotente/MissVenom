@@ -124,6 +124,18 @@
   <data name="HttpServer" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Libraries\HttpServer.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PcapDotNet_Base" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Libraries\PcapDotNet.Base.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PcapDotNet_Core" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Libraries\PcapDotNet.Core.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PcapDotNet_Core_Extensions" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Libraries\PcapDotNet.Core.Extensions.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PcapDotNet_Packets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Libraries\PcapDotNet.Packets.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="WhatsAppApi" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Libraries\WhatsAppApi.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

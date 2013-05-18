@@ -66,15 +66,15 @@
     </Reference>
     <Reference Include="PcapDotNet.Base">
       <HintPath>Libraries\PcapDotNet.Base.dll</HintPath>
-    </Reference>
-    <Reference Include="PcapDotNet.Core">
-      <HintPath>Libraries\PcapDotNet.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="PcapDotNet.Core.Extensions">
       <HintPath>Libraries\PcapDotNet.Core.Extensions.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="PcapDotNet.Packets">
       <HintPath>Libraries\PcapDotNet.Packets.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -135,6 +135,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Libraries\WhatsAppApi.dll" />
+    <EmbeddedResource Include="Libraries\PcapDotNet.Base.dll" />
+    <EmbeddedResource Include="Libraries\PcapDotNet.Core.dll" />
+    <EmbeddedResource Include="Libraries\PcapDotNet.Core.Extensions.dll" />
+    <EmbeddedResource Include="Libraries\PcapDotNet.Packets.dll" />
     <Content Include="venom.ico" />
   </ItemGroup>
   <ItemGroup>

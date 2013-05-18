@@ -83,6 +83,46 @@ namespace MissVenom.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] PcapDotNet_Base {
+            get {
+                object obj = ResourceManager.GetObject("PcapDotNet_Base", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] PcapDotNet_Core {
+            get {
+                object obj = ResourceManager.GetObject("PcapDotNet_Core", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] PcapDotNet_Core_Extensions {
+            get {
+                object obj = ResourceManager.GetObject("PcapDotNet_Core_Extensions", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] PcapDotNet_Packets {
+            get {
+                object obj = ResourceManager.GetObject("PcapDotNet_Packets", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] WhatsAppApi {
             get {
                 object obj = ResourceManager.GetObject("WhatsAppApi", resourceCulture);

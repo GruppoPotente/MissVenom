@@ -86,7 +86,7 @@ namespace MissVenom
 
         protected void startTcpSniffer()
         {
-            bool derp = false;
+            bool derp = true;
             if (derp)
             {
                 try
@@ -140,37 +140,37 @@ namespace MissVenom
                     System.Windows.Forms.MessageBox.Show(E.ToString());
                 }
             }
-            else
-            {
-                IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
-                if (allDevices.Count == 0)
-                {
-                    this.AddListItem("No capture devices found");
-                    return;
-                }
-                if (allDevices.Count > 1)
-                {
-                    this.AddListItem("You have " + allDevices.Count + " devices");
-                    //show adapter selection dialog
-                    //todo
-                }
+            //else
+            //{
+            //    IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+            //    if (allDevices.Count == 0)
+            //    {
+            //        this.AddListItem("No capture devices found");
+            //        return;
+            //    }
+            //    if (allDevices.Count > 1)
+            //    {
+            //        this.AddListItem("You have " + allDevices.Count + " devices");
+            //        //show adapter selection dialog
+            //        //todo
+            //    }
 
-                PacketDevice device = allDevices.First();
+            //    PacketDevice device = allDevices.First();
 
-                // Open the device
-                using (PacketCommunicator communicator =
-                    device.Open(65536,                                  // portion of the packet to capture
-                    // 65536 guarantees that the whole packet will be captured on all the link layers
-                                        PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
-                                        1000))                                  // read timeout
-                {
-                    BerkeleyPacketFilter filter = communicator.CreateFilter("port 5222 and dst " + GetIP().ToString());
-                    Console.WriteLine("Listening on " + device.Description + "...");
-                    communicator.SetFilter(filter);
-                    // start the capture
-                    communicator.ReceivePackets(0, PacketHandler);
-                }
-            }
+            //    // Open the device
+            //    using (PacketCommunicator communicator =
+            //        device.Open(65536,                                  // portion of the packet to capture
+            //        // 65536 guarantees that the whole packet will be captured on all the link layers
+            //                            PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
+            //                            1000))                                  // read timeout
+            //    {
+            //        BerkeleyPacketFilter filter = communicator.CreateFilter("port 5222 and dst " + GetIP().ToString());
+            //        Console.WriteLine("Listening on " + device.Description + "...");
+            //        communicator.SetFilter(filter);
+            //        // start the capture
+            //        communicator.ReceivePackets(0, PacketHandler);
+            //    }
+            //}
         }
 
         public virtual void CallReceive(System.IAsyncResult ar)
