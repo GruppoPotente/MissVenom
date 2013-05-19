@@ -1,8 +1,7 @@
 ﻿using ARSoft.Tools.Net.Dns;
 using HttpServer;
 using Microsoft.Win32;
-using PcapDotNet.Core;
-using PcapDotNet.Packets;
+using MissVenom.Sniff;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,6 +18,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Tamir.IPLib;
+using Tamir.IPLib.Packets;
 using WhatsAppApi.Helper;
 
 namespace MissVenom
@@ -34,6 +35,7 @@ namespace MissVenom
         private byte[] _encryptionKey;
         private List<byte> streamBuffer = new List<byte>();
         private uint streamIndex = 0;
+        static Dictionary<Connection, TcpRecon> sharpPcapDict = new Dictionary<Connection, TcpRecon>();
 
         public static string resolveHost(string hostname)
         {
@@ -74,7 +76,7 @@ namespace MissVenom
         {
             try
             {
-                DnsServer server = new DnsServer(IPAddress.Any, 10, 10, onDnsQuery);
+                DnsServer server = new DnsServer(System.Net.IPAddress.Any, 10, 10, onDnsQuery);
                 this.AddListItem("Started DNS proxy...");
                 server.Start();
             }
@@ -86,7 +88,7 @@ namespace MissVenom
 
         protected void startTcpSniffer()
         {
-            bool derp = true;
+            bool derp = false;
             if (derp)
             {
                 try
@@ -97,7 +99,7 @@ namespace MissVenom
                         throw new Exception("Could not resolve host");
                     }
                     IPEndPoint src = new IPEndPoint(GetIP(), 5222);
-                    IPEndPoint dst = new IPEndPoint(IPAddress.Parse(targethost), 5222);
+                    IPEndPoint dst = new IPEndPoint(System.Net.IPAddress.Parse(targethost), 5222);
                     this.AddListItem("Started TCP sniffer...");
                     try
                     {
@@ -140,37 +142,24 @@ namespace MissVenom
                     System.Windows.Forms.MessageBox.Show(E.ToString());
                 }
             }
-            //else
-            //{
-            //    IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
-            //    if (allDevices.Count == 0)
-            //    {
-            //        this.AddListItem("No capture devices found");
-            //        return;
-            //    }
-            //    if (allDevices.Count > 1)
-            //    {
-            //        this.AddListItem("You have " + allDevices.Count + " devices");
-            //        //show adapter selection dialog
-            //        //todo
-            //    }
+            else
+            {
+                try
+                {
+                    PcapDeviceList devices = SharpPcap.GetAllDevices();
+                    PcapDevice dev = devices[0];
+                    dev.PcapOpen(true, 100000);
 
-            //    PacketDevice device = allDevices.First();
+                    dev.PcapOnPacketArrival += new SharpPcap.PacketArrivalEvent(onPacketArrival);
+                    dev.PcapSetFilter("port 5222");
+                    dev.PcapCapture(SharpPcap.INFINITE);
 
-            //    // Open the device
-            //    using (PacketCommunicator communicator =
-            //        device.Open(65536,                                  // portion of the packet to capture
-            //        // 65536 guarantees that the whole packet will be captured on all the link layers
-            //                            PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
-            //                            1000))                                  // read timeout
-            //    {
-            //        BerkeleyPacketFilter filter = communicator.CreateFilter("port 5222 and dst " + GetIP().ToString());
-            //        Console.WriteLine("Listening on " + device.Description + "...");
-            //        communicator.SetFilter(filter);
-            //        // start the capture
-            //        communicator.ReceivePackets(0, PacketHandler);
-            //    }
-            //}
+                }
+                catch (Exception ex)
+                {
+                    this.AddListItem(ex.Message);
+                }
+            }
         }
 
         public virtual void CallReceive(System.IAsyncResult ar)
@@ -195,9 +184,19 @@ namespace MissVenom
         }
 
         // Callback function invoked by Pcap.Net for every incoming packet
-        private void PacketHandler(Packet packet)
+        private void onPacketArrival(object sender, Packet packet)
         {
-            this.AddLogItem(packet.IpV4.Tcp.Payload.ToArray<byte>(), true);
+            TCPPacket pack = packet as TCPPacket;
+            Connection c = new Connection(pack);
+
+            if (!sharpPcapDict.ContainsKey(c))
+            {
+                string filename = c.getFileName("");
+                TcpRecon rec = new TcpRecon(filename);
+                sharpPcapDict.Add(c, rec);
+            }
+            sharpPcapDict[c].ReassemblePacket(pack);
+            //this.AddLogItem(sharpPcapDict[c].ToString(), true);
         }
 
         public Form1()
@@ -318,12 +317,12 @@ namespace MissVenom
             this.AddListItem(" ");
         }
 
-        static IPAddress GetIP()
+        static System.Net.IPAddress GetIP()
         {
             IPHostEntry host;
-            IPAddress localIP = null;
+            System.Net.IPAddress localIP = null;
             host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (IPAddress ip in host.AddressList)
+            foreach (System.Net.IPAddress ip in host.AddressList)
             {
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
@@ -338,7 +337,7 @@ namespace MissVenom
             List<string> res = new List<string>();
             IPHostEntry host;
             host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (IPAddress ip in host.AddressList)
+            foreach (System.Net.IPAddress ip in host.AddressList)
             {
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
@@ -348,7 +347,7 @@ namespace MissVenom
             return res.ToArray();
         }
 
-        static DnsMessageBase onDnsQuery(DnsMessageBase message, IPAddress clientAddress, ProtocolType protocol)
+        static DnsMessageBase onDnsQuery(DnsMessageBase message, System.Net.IPAddress clientAddress, ProtocolType protocol)
         {
             message.IsQuery = false;
 
@@ -365,7 +364,7 @@ namespace MissVenom
                 )
                 {
                     query.ReturnCode = ReturnCode.NoError;
-                    IPAddress localIP = GetIP();
+                    System.Net.IPAddress localIP = GetIP();
                     if (localIP != null)
                     {
                         query.AnswerRecords.Add(new ARecord("v.whatsapp.net", 30, localIP));
@@ -433,7 +432,7 @@ namespace MissVenom
             var certificate = new X509Certificate2(this.getCertificate(), "banana");
             try
             {
-                var listener = (SecureHttpListener)HttpServer.HttpListener.Create(IPAddress.Any, 443, certificate);
+                var listener = (SecureHttpListener)HttpServer.HttpListener.Create(System.Net.IPAddress.Any, 443, certificate);
                 listener.UseClientCertificate = true;
                 listener.RequestReceived += onHttpsRequest;
                 listener.Start(5);

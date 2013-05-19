@@ -3,7 +3,7 @@
 
 namespace MissVenom
 {
-	public class TCPPacket //rfc793
+	public class vTCPPacket //rfc793
 	{
 		public ushort SourcePort;
 		public ushort DestinationPort;
@@ -17,9 +17,9 @@ namespace MissVenom
 		public byte[] Options;
 		public byte[] PacketData;
 
-		public TCPPacket() : base() { }
+		public vTCPPacket() : base() { }
 
-		public TCPPacket(ref byte[] Packet) : base()
+		public vTCPPacket(ref byte[] Packet) : base()
 		{
 			try {
 				SourcePort = (ushort)System.Net.IPAddress.NetworkToHostOrder(System.BitConverter.ToInt16(Packet, 0));

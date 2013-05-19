@@ -19,7 +19,7 @@ namespace MissVenom
 		public System.Net.IPAddress DestinationAddress;
 		public byte[] PacketData;
 
-		public TCPPacket TCP;
+		public vTCPPacket TCP;
 
 		public IPPacket() : base() { }
 		
@@ -43,7 +43,7 @@ namespace MissVenom
 			} catch { }
 			
 			switch (Protocol) {
-				case 6: TCP = new TCPPacket(ref PacketData); break;
+				case 6: TCP = new vTCPPacket(ref PacketData); break;
 			}
 		}
 
