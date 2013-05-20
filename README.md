@@ -1,7 +1,7 @@
 MissVenom
 =========
 
-Small standalone SSL proxy for WhatsApp in .NET based on my upcoming MissProxy.
+Standalone multifunctional proxy for WhatsApp in .NET
 
 ![MissVenom](https://dl.dropboxusercontent.com/u/68235039/proxy.png)
 
@@ -23,6 +23,7 @@ Usage:
 - Your identity and password will appear in MissVenom
 
 TODO:
+- TCP decryption (currently working on)
 - Logging
 - Deserialize GET and JSON for nice formatting
 - ARP spoofing (making your life easier, one commit at a time)
