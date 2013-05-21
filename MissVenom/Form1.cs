@@ -1,7 +1,6 @@
 ﻿using ARSoft.Tools.Net.Dns;
 using HttpServer;
 using Microsoft.Win32;
-using MissVenom.Sniff;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,24 +17,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Tamir.IPLib;
-using Tamir.IPLib.Packets;
 using WhatsAppApi.Helper;
 
 namespace MissVenom
 {
     public partial class Form1 : Form
     {
-        const int PacketBufferSize = 65536;
-        private BinTreeNodeReader reader;
-        private List<IncompleteMessageException> incompleteMessage = new List<IncompleteMessageException>();
-        private byte[] PacketBuffer = new byte[PacketBufferSize];
         private string targetIP;
-        private string password;
-        private byte[] _encryptionKey;
-        private List<byte> streamBuffer = new List<byte>();
-        private uint streamIndex = 0;
-        static Dictionary<Connection, TcpRecon> sharpPcapDict = new Dictionary<Connection, TcpRecon>();
 
         public static string resolveHost(string hostname)
         {
@@ -86,119 +74,6 @@ namespace MissVenom
             }
         }
 
-        protected void startTcpSniffer()
-        {
-            bool derp = false;
-            if (derp)
-            {
-                try
-                {
-                    string targethost = "50.22.231.45";// resolveHost("c.whatsapp.net");
-                    if (string.IsNullOrEmpty(targethost))
-                    {
-                        throw new Exception("Could not resolve host");
-                    }
-                    IPEndPoint src = new IPEndPoint(GetIP(), 5222);
-                    IPEndPoint dst = new IPEndPoint(System.Net.IPAddress.Parse(targethost), 5222);
-                    this.AddListItem("Started TCP sniffer...");
-                    try
-                    {
-                        Socket tcpSocket = new Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Raw, System.Net.Sockets.ProtocolType.IP);
-                        try
-                        {
-                            tcpSocket.Bind(src);
-                            tcpSocket.SetSocketOption(System.Net.Sockets.SocketOptionLevel.IP, System.Net.Sockets.SocketOptionName.HeaderIncluded, 1);
-                            tcpSocket.IOControl(unchecked((int)0x98000001), new byte[4] { 1, 0, 0, 0 }, new byte[4]);
-                            while (true)
-                            {
-                                System.IAsyncResult ar = tcpSocket.BeginReceive(this.PacketBuffer, 0, PacketBufferSize, System.Net.Sockets.SocketFlags.None, new System.AsyncCallback(CallReceive), this);
-                                while (tcpSocket.Available == 0)
-                                {
-                                    System.Threading.Thread.Sleep(10);
-                                }
-                                int Size = tcpSocket.EndReceive(ar);
-                                //ExtractBuffer(ref PacketBuffer, targethost);
-                            }
-                        }
-                        finally
-                        {
-                            if (tcpSocket != null)
-                            {
-                                tcpSocket.Shutdown(System.Net.Sockets.SocketShutdown.Both);
-                                tcpSocket.Close();
-                            }
-                        }
-                    }
-                    finally
-                    {
-                    }
-                }
-                catch (System.Threading.ThreadAbortException)
-                {
-                    this.AddListItem("TCP SNIFFER: Thread aborted");
-                }
-                catch (System.Exception E)
-                {
-                    System.Windows.Forms.MessageBox.Show(E.ToString());
-                }
-            }
-            else
-            {
-                try
-                {
-                    PcapDeviceList devices = SharpPcap.GetAllDevices();
-                    PcapDevice dev = devices[0];
-                    dev.PcapOpen(true, 100000);
-
-                    dev.PcapOnPacketArrival += new SharpPcap.PacketArrivalEvent(onPacketArrival);
-                    dev.PcapSetFilter("port 5222");
-                    dev.PcapCapture(SharpPcap.INFINITE);
-
-                }
-                catch (Exception ex)
-                {
-                    this.AddListItem(ex.Message);
-                }
-            }
-        }
-
-        public virtual void CallReceive(System.IAsyncResult ar)
-        {
-            this.ExtractBuffer();
-        }
-
-        protected void ExtractBuffer()
-        {
-            IPPacket IP = new IPPacket(ref PacketBuffer);
-            if (IP.TCP != null && (IP.TCP.DestinationPort == 5222 || IP.TCP.SourcePort == 5222) && IP.TCP.PacketData.Length > 0)
-            {
-                if (IP.SourceAddress.ToString() == this.targetIP)
-                {
-                    this.AddLogItem(IP.TCP.PacketData, false);
-                }
-                else
-                {
-                    this.AddLogItem(IP.TCP.PacketData, true);
-                }
-            }
-        }
-
-        // Callback function invoked by Pcap.Net for every incoming packet
-        private void onPacketArrival(object sender, Packet packet)
-        {
-            TCPPacket pack = packet as TCPPacket;
-            Connection c = new Connection(pack);
-
-            if (!sharpPcapDict.ContainsKey(c))
-            {
-                string filename = c.getFileName("");
-                TcpRecon rec = new TcpRecon(filename);
-                sharpPcapDict.Add(c, rec);
-            }
-            sharpPcapDict[c].ReassemblePacket(pack);
-            //this.AddLogItem(sharpPcapDict[c].ToString(), true);
-        }
-
         public Form1()
         {
             InitializeComponent();
@@ -218,72 +93,6 @@ namespace MissVenom
             {
                 this.textBox1.AppendText(data + "\r\n");
                 this.textBox1.DeselectAll();
-            }
-        }
-
-        private void AddLogItem(byte[] data, bool toClient)
-        {
-            if (this.textBox1.InvokeRequired)
-            {
-                AddLogItemCallback a = new AddLogItemCallback(AddLogItem);
-                this.Invoke(a, new object[] { data, toClient });
-            }
-            else
-            {
-                string prefix;
-                if (toClient)
-                {
-                    prefix = "rx";
-                }
-                else
-                {
-                    prefix = "tx";
-                }
-                try
-                {
-                    File.AppendAllLines("raw.log", new string[] { prefix + " " + WhatsAppApi.WhatsApp.SYSEncoding.GetString(data)});
-                    try
-                    {
-                        //if (this.incompleteMessage.Count > 0)
-                        //{
-                        //    List<byte> foo = new List<byte>();
-                        //    foreach (IncompleteMessageException exe in this.incompleteMessage)
-                        //    {
-                        //        foo.AddRange(exe.getInput());
-                        //    }
-                        //    this.incompleteMessage.Clear();
-                        //    foo.AddRange(data);
-                        //    data = foo.ToArray();
-                        //}
-
-                        ProtocolTreeNode node = this.reader.nextTree(data);
-                        while (node != null)
-                        {
-                            //look for challenge key
-                            if (node.tag == "challenge")
-                            {
-                                byte[] challengeBytes = node.data;
-                                byte[] rawPass = Convert.FromBase64String(this.password);
-                                Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(rawPass, challengeBytes, 16);
-                                this._encryptionKey = r.GetBytes(20);
-                                this.reader.Encryptionkey = _encryptionKey;
-                            }
-
-                            File.AppendAllLines("xmpp.log", new string[] { node.NodeString(prefix) });
-                            node = this.reader.nextTree();
-                        }
-                    }
-                    catch (IncompleteMessageException inc)
-                    {
-                        //this.incompleteMessage.Add(inc);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.AddListItem(ex.Message);
-                    }
-                }
-                catch (Exception e)
-                { }
             }
         }
 
@@ -398,18 +207,6 @@ namespace MissVenom
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            this.password = this.textBox2.Text;
-            this.textBox2.Enabled = false;
-            this.button1.Enabled = false;
-
-            string[] dict = DecodeHelper.getDictionary();
-            this.reader = new BinTreeNodeReader(dict);
-
             this.SetRegIpForward();
             this.targetIP = GetIP().ToString();
             if (String.IsNullOrEmpty(this.targetIP))
@@ -422,11 +219,6 @@ namespace MissVenom
             Thread srv = new Thread(new ThreadStart(startDnsServer));
             srv.IsBackground = true;
             srv.Start();
-
-            //start TCP proxy
-            Thread tcpproxy = new Thread(new ThreadStart(startTcpSniffer));
-            tcpproxy.IsBackground = true;
-            tcpproxy.Start();
 
             //start HTTPS server
             var certificate = new X509Certificate2(this.getCertificate(), "banana");
@@ -458,7 +250,6 @@ namespace MissVenom
             }
 
             this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS)");
-
         }
     }
 }
