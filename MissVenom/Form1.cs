@@ -23,6 +23,11 @@ namespace MissVenom
 {
     public partial class Form1 : Form
     {
+        private TcpClient s_internal;
+        private TcpClient s_external;
+        private TcpListener tcpl;
+        private List<byte[]> bufferedMessages = new List<byte[]>();
+
         private string targetIP;
 
         public static string resolveHost(string hostname)
@@ -170,14 +175,24 @@ namespace MissVenom
                 //resolve v.whatsapp.net
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
-                    query.Questions[0].Name.Equals("v.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)
+                    (
+                        query.Questions[0].Name.Equals("v.whatsapp.net")//rewrite registry host
+                        ||
+                        query.Questions[0].Name.Equals("c.whatsapp.net")//rewrite tcp hosts
+                        ||
+                        query.Questions[0].Name.Equals("c1.whatsapp.net")
+                        ||
+                        query.Questions[0].Name.Equals("c2.whatsapp.net")
+                        ||
+                        query.Questions[0].Name.Equals("c3.whatsapp.net")
+                    )
                 )
                 {
                     query.ReturnCode = ReturnCode.NoError;
                     System.Net.IPAddress localIP = GetIP();
                     if (localIP != null)
                     {
-                        query.AnswerRecords.Add(new ARecord("v.whatsapp.net", 30, localIP));
+                        query.AnswerRecords.Add(new ARecord(query.Questions[0].Name, 30, localIP));
                         return query;
                     }
                 }
@@ -251,7 +266,73 @@ namespace MissVenom
                 this.AddListItem("WARNING: Multiple IP addresses found: " + String.Join(" ,", ips));
             }
 
+            //start tcp relay
+            Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
+            tcpr.IsBackground = true;
+            tcpr.Start();
+
             this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS)");
+        }
+
+        private void startTcpRelay()
+        {
+            IPAddress ip = GetIP();
+            this.tcpl = new TcpListener(GetIP(), 5222);
+            tcpl.Start();
+            this.AddListItem("Started TCP relay, waiting for connection...");
+            this.s_internal = this.tcpl.AcceptTcpClient();
+            this.AddListItem("Client connected!"); 
+            this.s_external = new TcpClient("c.whatsapp.net", 5222);
+
+            //start external processor thread
+            Thread extp = new Thread(new ThreadStart(externalProcessor));
+            extp.IsBackground = true;
+            extp.Start();
+
+            //process synchronous
+            this.processConnection(ref this.s_internal, ref this.s_external);
+
+            this.AddListItem("WARNING: Internal socket disconnected");
+        }
+
+        private void processConnection(ref TcpClient from, ref TcpClient to)
+        {
+            NetworkStream stream = from.GetStream();
+            byte[] buffer = new byte[1024];
+            //process internal data
+            while (from.Connected)
+            {
+                try
+                {
+                    int i = stream.Read(buffer, 0, buffer.Length);
+                    if (i > 0)
+                    {
+                        while (i > 0)
+                        {
+                            to.Client.Send(buffer);
+                            this.bufferedMessages.Add(buffer);
+                            this.AddListItem(WhatsAppApi.WhatsApp.SYSEncoding.GetString(buffer));
+                            i = stream.Read(buffer, 0, buffer.Length);
+                        }
+                    }
+                    else
+                    {
+                        Thread.Sleep(500);
+                    }
+                }
+                catch (Exception e)
+                {
+                    this.AddListItem(e.Message);
+                }
+            }
+        }
+
+        private void externalProcessor()
+        {
+            //process synchronous
+            this.processConnection(ref this.s_external, ref this.s_internal);
+
+            this.AddListItem("WARNING: External socket disconnected");
         }
     }
 }
