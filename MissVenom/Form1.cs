@@ -44,6 +44,7 @@ namespace MissVenom
                 {
                     key.SetValue("IPEnableRouter", 1);
                     key.Close();
+                    this.AddListItem("Updated registry to forward traffic");
                 }
             }
             catch (Exception ex)
@@ -228,6 +229,7 @@ namespace MissVenom
                 listener.UseClientCertificate = true;
                 listener.RequestReceived += onHttpsRequest;
                 listener.Start(5);
+                this.AddListItem("SSL proxy started");
                 this.AddListItem("Listening...");
             }
             catch (System.Net.Sockets.SocketException ex)
