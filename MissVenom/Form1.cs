@@ -60,7 +60,8 @@ namespace MissVenom
 
         private byte[] getCertificate()
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"server.pfx");
+            //var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"server.pfx");
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"all.whatsapp.net.pfx");
             var bytes = new byte[stream.Length];
             stream.Read(bytes, 0, bytes.Length);
             return bytes;
