@@ -26,7 +26,6 @@ Usage:
 TODO:
 - TCP dump (currently working on)
 - TCP decryption (currently working on)
-- ContactSync intercept
-- Logging
 - Deserialize GET and JSON for nice formatting
+- Respond with server.v2.crt on requesting https://cert.whatsapp.net (for easy deployment)
 - ARP spoofing (making your life easier, one commit at a time)
