@@ -176,18 +176,7 @@ namespace MissVenom
                 //resolve v.whatsapp.net
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
-                    (
-                        query.Questions[0].Name.Equals("v.whatsapp.net")//rewrite registry host
-                        ||
-                        query.Questions[0].Name.Equals("c.whatsapp.net")//rewrite tcp hosts
-                        ||
-                        query.Questions[0].Name.Equals("c1.whatsapp.net")
-                        ||
-                        query.Questions[0].Name.Equals("c2.whatsapp.net")
-                        ||
-                        query.Questions[0].Name.Equals("c3.whatsapp.net")
-                    )
-                )
+                    query.Questions[0].Name.EndsWith(".whatsapp.net", StringComparison.InvariantCultureIgnoreCase))//rewrite ALL whatsapp.net hosts! :D
                 {
                     query.ReturnCode = ReturnCode.NoError;
                     System.Net.IPAddress localIP = GetIP();
