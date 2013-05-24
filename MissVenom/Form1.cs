@@ -298,7 +298,7 @@ namespace MissVenom
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.SetRegIpForward();
+            //this.SetRegIpForward();
             this.targetIP = GetIP().ToString();
             if (String.IsNullOrEmpty(this.targetIP))
             {
@@ -345,8 +345,7 @@ namespace MissVenom
             //Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
             //tcpr.IsBackground = true;
             //tcpr.Start();
-
-            this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS)");
+            this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate");
         }
 
         private void startTcpRelay()
