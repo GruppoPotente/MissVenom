@@ -241,10 +241,17 @@ namespace MissVenom
             if ((query != null) && (query.Questions.Count == 1))
             {
                 //HOOK:
-                //resolve v.whatsapp.net
+                //resolve v.whatsapp.net and sro.whatsapp.net
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
-                    query.Questions[0].Name.EndsWith(".whatsapp.net", StringComparison.InvariantCultureIgnoreCase))//rewrite ALL whatsapp.net hosts! :D
+                    (
+                        query.Questions[0].Name.Equals("v.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//registration
+                            ||
+                        query.Questions[0].Name.Equals("sro.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//contact sync
+                            ||
+                        query.Questions[0].Name.Equals("cert.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//certificate provider
+                    )
+                    )
                 {
                     query.ReturnCode = ReturnCode.NoError;
                     System.Net.IPAddress localIP = GetIP();
@@ -339,8 +346,14 @@ namespace MissVenom
             tcpl.Start();
             this.AddListItem("Started TCP relay, waiting for connection...");
             this.s_internal = this.tcpl.AcceptTcpClient();
+            byte[] intbuf = new byte[this.s_internal.ReceiveBufferSize];
+            this.s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
+
             this.AddListItem("Client connected!"); 
-            this.s_external = new TcpClient("c.whatsapp.net", 5222);
+            this.s_external = new TcpClient();
+            this.s_external.Connect("c.whatsapp.net", 5222);
+            byte[] extbuf = new byte[this.s_external.ReceiveBufferSize];
+            this.s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
 
             //start external processor thread
             Thread extp = new Thread(new ThreadStart(externalProcessor));
@@ -351,6 +364,16 @@ namespace MissVenom
             this.processConnection(ref this.s_internal, ref this.s_external);
 
             this.AddListItem("WARNING: Internal socket disconnected");
+        }
+
+        private void onReceiveExtern(IAsyncResult result)
+        {
+
+        }
+
+        private void onReceiveIntern(IAsyncResult result)
+        {
+
         }
 
         private void processConnection(ref TcpClient from, ref TcpClient to)
