@@ -115,7 +115,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <EmbeddedResource Include="server.pfx" />
+    <EmbeddedResource Include="server.v2.crt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="venom.ico" />

@@ -60,8 +60,15 @@ namespace MissVenom
 
         private byte[] getCertificate()
         {
-            //var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"server.pfx");
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"all.whatsapp.net.pfx");
+            var bytes = new byte[stream.Length];
+            stream.Read(bytes, 0, bytes.Length);
+            return bytes;
+        }
+
+        private byte[] getClientCertificate()
+        {
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"server.v2.crt");
             var bytes = new byte[stream.Length];
             stream.Read(bytes, 0, bytes.Length);
             return bytes;
@@ -116,15 +123,18 @@ namespace MissVenom
         {
             String url;
             //dev, for test on localhost:
-            if (e.Request.Uri.Authority.EndsWith(".whatsapp.net"))
+            if (e.Request.Uri.Authority.EndsWith(".whatsapp.net") && !e.Request.Uri.Authority.Equals("cert.whatsapp.net", StringComparison.InvariantCultureIgnoreCase))
             {
                 //use original
                 url = e.Request.Uri.AbsoluteUri;
             }
             else
             {
-                //overwrite
-                url = "https://v.whatsapp.net" + e.Request.Uri.PathAndQuery;
+                //return certificate
+                byte[] cert = this.getClientCertificate();
+                e.Response.ContentType = new HttpServer.Headers.ContentTypeHeader("application/x-x509-ca-cert");
+                e.Response.Body.Write(cert, 0, cert.Length);
+                return;
             }
 
             HttpWebRequest request = HttpWebRequest.Create(url) as HttpWebRequest;
