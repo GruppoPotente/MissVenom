@@ -5,7 +5,7 @@ Standalone multifunctional proxy for WhatsApp in .NET
 
 ![MissVenom](https://dl.dropboxusercontent.com/u/68235039/venom.jpg)
 
-Using WebServer library 2.0 from http://webserver.codeplex.com/
+Using modified WebServer library 2.0 from http://webserver.codeplex.com/
 
 Using ARSoft.Tools.Net from http://arsofttoolsnet.codeplex.com/
 
@@ -13,19 +13,16 @@ Not compatible with Android 2.x (does not support installing root certificates)
 
 ###Root/jailbread/unlock not required###
 
-Usage:
-- Make sure your mobile device is on the same subnet as your machine
-- Install server.crt as trusted root certificate on your mobile device
-- Unregister WhatsApp app (e.g. wipe app data)
+Usage (v1.1.4.0):
+- Make sure your mobile device is on the same WLAN subnet as your machine
+- Unregister WhatsApp app on your device (e.g. wipe app data)
 - Start MissVenom.exe
-- Set DNS address on your phone to the displayed IP address (in WiFi->Static IP configuration)
-- **Reboot phone to clear DNS cache before proceeding**
-- Register WhatsApp on your device
-- Your identity and password will appear in MissVenom
+- Set DNS address on your device to the displayed IP address (in WiFi->Static IP configuration)
+- Open your device's browser and go to https://cert.whatsapp.net to install root certificate
+- Open and register WhatsApp on your device
+- Your identity and password will appear in MissVenom as well as in MissVenom.log
 
 TODO:
-- TCP dump (currently working on)
-- TCP decryption (currently working on)
-- Deserialize GET and JSON for nice formatting
-- Respond with server.v2.crt on requesting https://cert.whatsapp.net (for easy deployment)
+- TCP stream capture (currently working on)
+- Deserialize GET and JSON for nice formatting (fancy fancy)
 - ARP spoofing (making your life easier, one commit at a time)
