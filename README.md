@@ -21,6 +21,7 @@ Usage (v1.1.4.0):
 - Open your device's browser and go to https://cert.whatsapp.net to install root certificate
 - Open and register WhatsApp on your device
 - Your identity and password will appear in MissVenom as well as in MissVenom.log
+- Don't forget to turn off static IP address and reconnect to WiFi afterward!
 
 TODO:
 - TCP stream capture (currently working on)
