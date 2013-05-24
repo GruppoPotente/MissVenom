@@ -27,6 +27,11 @@ namespace MissVenom
         private static TcpClient s_external;
         private TcpListener tcpl;
         private List<byte[]> bufferedMessages = new List<byte[]>();
+        private string password = string.Empty;
+        private static BinTreeNodeReader reader = new BinTreeNodeReader(WhatsAppApi.Helper.DecodeHelper.getDictionary());
+        private static List<byte> incompleteInBuffer = new List<byte>();
+        private static List<byte> incompleteOutBuffer = new List<byte>();
+        private static FileStream rawfs;
 
         private string targetIP;
 
@@ -297,8 +302,11 @@ namespace MissVenom
             return message;
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
+            //start
+            this.password = this.textBox2.Text;
+
             //this.SetRegIpForward();
             this.targetIP = GetIP().ToString();
             if (String.IsNullOrEmpty(this.targetIP))
@@ -358,11 +366,13 @@ namespace MissVenom
             this.AddListItem("Started TCP relay, waiting for connection...");
             
             s_internal = this.tcpl.AcceptTcpClient();
+            s_internal.ReceiveBufferSize = 1024;
             byte[] intbuf = new byte[s_internal.ReceiveBufferSize];
             this.AddListItem("Client connected!"); 
 
             s_external = new TcpClient();
             s_external.Connect("c.whatsapp.net", 5222);
+            s_external.ReceiveBufferSize = 1024;
             byte[] extbuf = new byte[s_external.ReceiveBufferSize];
 
             s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
@@ -371,36 +381,65 @@ namespace MissVenom
 
         private void onReceiveExtern(IAsyncResult result)
         {
-            try
-            {
-                byte[] buffer = result.AsyncState as byte[];
-                buffer = trimBuffer(buffer);
-                File.AppendAllLines("raw.log", new string[] { "IN: " + WhatsAppApi.WhatsApp.SYSEncoding.GetString(buffer) });
-                //send
-                s_internal.GetStream().Write(buffer, 0, buffer.Length);
-                s_external.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveExtern, buffer);
-            }
-            catch (Exception e)
-            {
-                this.AddListItem("TCP EXT ERROR: " + e.Message);
-            }
+            //if (s_external.Connected)
+            //{
+                try
+                {
+                    byte[] buffer = result.AsyncState as byte[];
+                    buffer = trimBuffer(buffer);
+                    //string decoded = WhatsAppApi.WhatsApp.SYSEncoding.GetString(buffer);
+                    //string[] parts = decoded.Split(new string[] { "\0\0" }, System.StringSplitOptions.RemoveEmptyEntries);
+                    //File.AppendAllLines("debug.log", parts);
+                    //foreach (string part in parts)
+                    //{
+                    //    byte[] buff = WhatsAppApi.WhatsApp.SYSEncoding.GetBytes(part);
+                    //    File.AppendAllLines("raw.log", new string[] { "rx " + Convert.ToBase64String(buff) });
+                    //    this.decodeInTree(buff);
+                    //}
+                    s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                    //if (s_external.Connected)
+                    //{
+                        buffer = new byte[1024];
+                        s_external.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveExtern, buffer);
+                    //}
+                }
+                catch (Exception e)
+                {
+                    this.AddListItem("TCP EXT ERROR: " + e.Message);
+                }
+            //}
         }
 
         private void onReceiveIntern(IAsyncResult result)
         {
-            try
-            {
-                byte[] buffer = result.AsyncState as byte[];
-                buffer = trimBuffer(buffer);
-                File.AppendAllLines("raw.log", new string[] { "OUT: " + WhatsAppApi.WhatsApp.SYSEncoding.GetString(buffer) });
-                //send
-                s_external.GetStream().Write(buffer, 0, buffer.Length);
-                s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
-            }
-            catch (Exception e)
-            {
-                this.AddListItem("TCP INT ERROR: " + e.Message);
-            }
+            //if (s_internal.Connected)
+            //{
+                try
+                {
+                    byte[] buffer = result.AsyncState as byte[];
+                    buffer = trimBuffer(buffer);
+                    //string decoded = WhatsAppApi.WhatsApp.SYSEncoding.GetString(buffer);
+                    //string[] parts = decoded.Split(new string[] { "\0\0\b" }, System.StringSplitOptions.RemoveEmptyEntries);
+                    //File.AppendAllLines("debug.log", parts);
+                    //foreach (string part in parts)
+                    //{
+
+                        //byte[] buff = WhatsAppApi.WhatsApp.SYSEncoding.GetBytes(part);
+                        //File.AppendAllLines("raw.log", new string[] { "tx " + Convert.ToBase64String(buff) });
+                        //this.decodeOutTree(buff);
+                    //}
+                    s_external.GetStream().Write(buffer, 0, buffer.Length);
+                    //if (s_internal.Connected)
+                    //{
+                        buffer = new byte[1024];
+                        s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
+                    //}
+                }
+                catch (Exception e)
+                {
+                    this.AddListItem("TCP INT ERROR: " + e.Message);
+                }
+            //}
         }
 
         private static byte[] trimBuffer(byte[] buffer)
@@ -412,6 +451,72 @@ namespace MissVenom
             byte[] bar = new byte[i + 1];
             Array.Copy(buffer, bar, i + 1);
             return bar;
+        }
+
+        private void decodeInTree(byte[] data)
+        {
+            try
+            {
+                //if (incompleteInBuffer.Count > 0)
+                //{
+                //    incompleteInBuffer.AddRange(data);
+                //    data = incompleteInBuffer.ToArray();
+                //    incompleteInBuffer.Clear();
+                //}
+                ProtocolTreeNode node = reader.nextTree(data);
+                while (node != null)
+                {
+                    File.AppendAllLines("xmpp.log", new string[] { node.NodeString("rx") });
+
+                    //look for challengedata and forge key
+                    if (node.tag.Equals("challenge", StringComparison.InvariantCultureIgnoreCase) && !String.IsNullOrEmpty(this.password))
+                    {
+                        this.AddListItem("ChallengeKey received, forging key...");
+                        byte[] challengeData = node.GetData();
+                        byte[] pass = Convert.FromBase64String(this.password);
+                        Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(pass, challengeData, 16);
+                        byte[] key = r.GetBytes(20);
+                        reader.Encryptionkey = key;
+                    }
+
+                    node = reader.nextTree();
+                }
+            }
+            catch (IncompleteMessageException e)
+            {
+                //incompleteInBuffer.AddRange(e.getInput());
+            }
+            catch (Exception e)
+            {
+                this.AddListItem("INDECODER ERROR: " + e.Message);
+            }
+        }
+
+        private void decodeOutTree(byte[] data)
+        {
+            try
+            {
+                //if (incompleteOutBuffer.Count > 0)
+                //{
+                //    incompleteOutBuffer.AddRange(data);
+                //    data = incompleteOutBuffer.ToArray();
+                //    incompleteOutBuffer.Clear();
+                //}
+                ProtocolTreeNode node = reader.nextTree(data);
+                while (node != null)
+                {
+                    File.AppendAllLines("xmpp.log", new string[] { node.NodeString("tx") });
+                    node = reader.nextTree();
+                }
+            }
+            catch (IncompleteMessageException e)
+            {
+                //incompleteOutBuffer.AddRange(e.getInput());
+            }
+            catch (Exception e)
+            {
+                this.AddListItem("OUTDECODER ERROR: " + e.Message);
+            }
         }
     }
 }
