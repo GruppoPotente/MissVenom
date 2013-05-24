@@ -23,8 +23,8 @@ namespace MissVenom
 {
     public partial class Form1 : Form
     {
-        private TcpClient s_internal;
-        private TcpClient s_external;
+        private static TcpClient s_internal;
+        private static TcpClient s_external;
         private TcpListener tcpl;
         private List<byte[]> bufferedMessages = new List<byte[]>();
 
@@ -254,13 +254,14 @@ namespace MissVenom
                 //resolve v.whatsapp.net and sro.whatsapp.net
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
-                    (
-                        query.Questions[0].Name.Equals("v.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//registration
-                            ||
-                        query.Questions[0].Name.Equals("sro.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//contact sync
-                            ||
-                        query.Questions[0].Name.Equals("cert.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//certificate provider
-                    )
+                    query.Questions[0].Name.EndsWith(".whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//rewrite ALL whatsapp.net subdomains
+                    //(
+                    //    query.Questions[0].Name.Equals("v.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//registration
+                    //        ||
+                    //    query.Questions[0].Name.Equals("sro.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//contact sync
+                    //        ||
+                    //    query.Questions[0].Name.Equals("cert.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//certificate provider
+                    //)
                     )
                 {
                     query.ReturnCode = ReturnCode.NoError;
@@ -342,9 +343,10 @@ namespace MissVenom
             }
 
             //start tcp relay
-            //Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
-            //tcpr.IsBackground = true;
-            //tcpr.Start();
+            Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
+            tcpr.IsBackground = true;
+            tcpr.Start();
+
             this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate");
         }
 
@@ -354,82 +356,62 @@ namespace MissVenom
             this.tcpl = new TcpListener(IPAddress.Any, 5222);
             tcpl.Start();
             this.AddListItem("Started TCP relay, waiting for connection...");
-            this.s_internal = this.tcpl.AcceptTcpClient();
-            byte[] intbuf = new byte[this.s_internal.ReceiveBufferSize];
-            this.s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
-
+            
+            s_internal = this.tcpl.AcceptTcpClient();
+            byte[] intbuf = new byte[s_internal.ReceiveBufferSize];
             this.AddListItem("Client connected!"); 
-            this.s_external = new TcpClient();
-            this.s_external.Connect("c.whatsapp.net", 5222);
-            byte[] extbuf = new byte[this.s_external.ReceiveBufferSize];
-            this.s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
 
-            //start external processor thread
-            Thread extp = new Thread(new ThreadStart(externalProcessor));
-            extp.IsBackground = true;
-            extp.Start();
+            s_external = new TcpClient();
+            s_external.Connect("c.whatsapp.net", 5222);
+            byte[] extbuf = new byte[s_external.ReceiveBufferSize];
 
-            //process synchronous
-            this.processConnection(ref this.s_internal, ref this.s_external);
-
-            this.AddListItem("WARNING: Internal socket disconnected");
+            s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
+            s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
         }
 
         private void onReceiveExtern(IAsyncResult result)
         {
-
+            try
+            {
+                byte[] buffer = result.AsyncState as byte[];
+                buffer = trimBuffer(buffer);
+                File.AppendAllLines("raw.log", new string[] { "IN: " + WhatsAppApi.WhatsApp.SYSEncoding.GetString(buffer) });
+                //send
+                s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                s_external.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveExtern, buffer);
+            }
+            catch (Exception e)
+            {
+                this.AddListItem("TCP EXT ERROR: " + e.Message);
+            }
         }
 
         private void onReceiveIntern(IAsyncResult result)
         {
-
-        }
-
-        private void processConnection(ref TcpClient from, ref TcpClient to)
-        {
-            NetworkStream stream = from.GetStream();
-            byte[] buffer = new byte[1024];
-            //process internal data
-            while (from.Connected)
+            try
             {
-                try
-                {
-                    int i = stream.Read(buffer, 0, buffer.Length);
-                    if (i > 0)
-                    {
-                        while (i > 0)
-                        {
-                            //trim
-                            int ii = buffer.Length - 1;
-                            while (buffer[ii] == 0)
-                                --i;
-                            byte[] bar = new byte[i + 1];
-                            Array.Copy(buffer, bar, i + 1);
-
-                            to.Client.Send(bar);
-                            //this.bufferedMessages.Add(bar);
-                            this.AddListItem(WhatsAppApi.WhatsApp.SYSEncoding.GetString(bar));
-                            i = stream.Read(buffer, 0, buffer.Length);
-                        }
-                    }
-                    else
-                    {
-                        Thread.Sleep(500);
-                    }
-                }
-                catch (Exception e)
-                {
-                    this.AddListItem(e.Message);
-                }
+                byte[] buffer = result.AsyncState as byte[];
+                buffer = trimBuffer(buffer);
+                File.AppendAllLines("raw.log", new string[] { "OUT: " + WhatsAppApi.WhatsApp.SYSEncoding.GetString(buffer) });
+                //send
+                s_external.GetStream().Write(buffer, 0, buffer.Length);
+                s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
+            }
+            catch (Exception e)
+            {
+                this.AddListItem("TCP INT ERROR: " + e.Message);
             }
         }
 
-        private void externalProcessor()
+        private static byte[] trimBuffer(byte[] buffer)
         {
-            //process synchronous
-            this.processConnection(ref this.s_external, ref this.s_internal);
-
-            this.AddListItem("WARNING: External socket disconnected");
+            //trim null bytes
+            int i = buffer.Length - 1;
+            while (buffer[i] == 0)
+                --i;
+            byte[] bar = new byte[i + 1];
+            Array.Copy(buffer, bar, i + 1);
+            return bar;
         }
     }
 }
