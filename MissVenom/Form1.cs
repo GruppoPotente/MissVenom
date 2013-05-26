@@ -304,6 +304,10 @@ namespace MissVenom
 
         private void button1_Click(object sender, EventArgs e)
         {
+            //disable stuff
+            this.button1.Enabled = false;
+            this.textBox2.Enabled = false;
+
             //start
             this.password = this.textBox2.Text;
 
@@ -520,6 +524,12 @@ namespace MissVenom
             {
                 this.AddListItem("OUTDECODER ERROR: " + e.Message);
             }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //add instructions
+            this.AddListItem("Enter your password (optional) and click Start to start MissVenom");
         }
     }
 }
