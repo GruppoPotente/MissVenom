@@ -3,9 +3,6 @@ using HttpServer;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,7 +12,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using WhatsAppApi.Helper;
 
@@ -260,13 +256,6 @@ namespace MissVenom
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
                     query.Questions[0].Name.EndsWith(".whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//rewrite ALL whatsapp.net subdomains
-                    //(
-                    //    query.Questions[0].Name.Equals("v.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//registration
-                    //        ||
-                    //    query.Questions[0].Name.Equals("sro.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//contact sync
-                    //        ||
-                    //    query.Questions[0].Name.Equals("cert.whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//certificate provider
-                    //)
                     )
                 {
                     query.ReturnCode = ReturnCode.NoError;
