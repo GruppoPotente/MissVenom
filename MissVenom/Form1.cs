@@ -397,6 +397,7 @@ namespace MissVenom
             {
                 byte[] buffer = result.AsyncState as byte[];
                 buffer = trimBuffer(buffer);
+                logRawData(buffer, "rx");
                 this.decodeInTree(buffer);
                 s_internal.GetStream().Write(buffer, 0, buffer.Length);
                 buffer = new byte[1024];
@@ -418,6 +419,7 @@ namespace MissVenom
             {
                 byte[] buffer = result.AsyncState as byte[];
                 buffer = trimBuffer(buffer);
+                logRawData(buffer, "tx");
                 this.decodeOutTree(buffer);
                 s_external.GetStream().Write(buffer, 0, buffer.Length);
                 buffer = new byte[1024];
@@ -442,6 +444,14 @@ namespace MissVenom
             byte[] bar = new byte[i + 1];
             Array.Copy(buffer, bar, i + 1);
             return bar;
+        }
+
+        private static void logRawData(byte[] data, string prefix)
+        {
+            string dat = Convert.ToBase64String(data);
+            File.AppendAllLines("b64raw.log", new string[] { prefix + " " + dat });
+            dat = WhatsAppApi.WhatsApp.SYSEncoding.GetString(data);
+            File.AppendAllLines("raw.log", new string[] { prefix + " " + dat });
         }
 
         private void decodeInTree(byte[] data)
