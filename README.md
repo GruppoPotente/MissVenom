@@ -15,7 +15,7 @@ Not compatible with Android 2.x (does not support installing root certificates)
 
 ###Root/jailbread/unlock not required###
 
-Usage (v1.2.0.0):
+Usage (> v1.1.4.0):
 To sniff password:
 - Make sure your mobile device is on the same WLAN subnet as your machine
 - Unregister WhatsApp app on your device (e.g. wipe app data)
@@ -26,7 +26,7 @@ To sniff password:
 - Your identity and password will appear in MissVenom as well as in MissVenom.log
 - Don't forget to turn off static IP address and reconnect to WiFi afterward!
 
-To sniff data:
+To sniff data (v1.2.0.0):
 - Make sure your mobile device is on the same WLAN subnet as your machine
 - Start MissVenom.exe
 - Enter the device password and press Start
