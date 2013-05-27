@@ -22,12 +22,8 @@ namespace MissVenom
         private static TcpClient s_internal;
         private static TcpClient s_external;
         private TcpListener tcpl;
-        private List<byte[]> bufferedMessages = new List<byte[]>();
         private string password = string.Empty;
         private static BinTreeNodeReader reader = new BinTreeNodeReader(WhatsAppApi.Helper.DecodeHelper.getDictionary());
-        private static List<byte> incompleteInBuffer = new List<byte>();
-        private static List<byte> incompleteOutBuffer = new List<byte>();
-        private static FileStream rawfs;
 
         private string targetIP;
 
@@ -149,10 +145,6 @@ namespace MissVenom
                 else
                 {
                     request.ContentType = "application/x-www-form-urlencoded";
-                }
-                if (e.Request.ContentLength != null)
-                {
-                    request.ContentLength = long.Parse(e.Request.ContentLength.HeaderValue);
                 }
                 if (e.Request.Headers["User-Agent"] != null)
                 {
@@ -442,21 +434,15 @@ namespace MissVenom
         private static void logRawData(byte[] data, string prefix)
         {
             string dat = Convert.ToBase64String(data);
-            File.AppendAllLines("b64raw.log", new string[] { prefix + " " + dat });
+            File.AppendAllLines("b64raw.log", new string[] { dat });
             dat = WhatsAppApi.WhatsApp.SYSEncoding.GetString(data);
-            File.AppendAllLines("raw.log", new string[] { prefix + " " + dat });
+            File.AppendAllLines("raw.log", new string[] { dat });
         }
 
         private void decodeInTree(byte[] data)
         {
             try
             {
-                //if (incompleteInBuffer.Count > 0)
-                //{
-                //    incompleteInBuffer.AddRange(data);
-                //    data = incompleteInBuffer.ToArray();
-                //    incompleteInBuffer.Clear();
-                //}
                 ProtocolTreeNode node = reader.nextTree(data);
                 while (node != null)
                 {
@@ -479,9 +465,7 @@ namespace MissVenom
                 }
             }
             catch (IncompleteMessageException e)
-            {
-                //incompleteInBuffer.AddRange(e.getInput());
-            }
+            { }
             catch (Exception e)
             {
                 this.AddListItem("INDECODER ERROR: " + e.Message);
@@ -492,12 +476,6 @@ namespace MissVenom
         {
             try
             {
-                //if (incompleteOutBuffer.Count > 0)
-                //{
-                //    incompleteOutBuffer.AddRange(data);
-                //    data = incompleteOutBuffer.ToArray();
-                //    incompleteOutBuffer.Clear();
-                //}
                 ProtocolTreeNode node = reader.nextTree(data);
                 while (node != null)
                 {
@@ -506,9 +484,7 @@ namespace MissVenom
                 }
             }
             catch (IncompleteMessageException e)
-            {
-                //incompleteOutBuffer.AddRange(e.getInput());
-            }
+            { }
             catch (Exception e)
             {
                 this.AddListItem("OUTDECODER ERROR: " + e.Message);
