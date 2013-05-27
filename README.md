@@ -25,6 +25,7 @@ To sniff password:
 - Open and register WhatsApp on your device
 - Your identity and password will appear in MissVenom as well as in MissVenom.log
 - Don't forget to turn off static IP address and reconnect to WiFi afterward!
+
 To sniff data:
 - Make sure your mobile device is on the same WLAN subnet as your machine
 - Start MissVenom.exe
