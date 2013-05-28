@@ -443,7 +443,7 @@ namespace MissVenom
         {
             try
             {
-                ProtocolTreeNode node = reader.nextTree(data);
+                ProtocolTreeNode node = reader.nextTree(data, false);
                 while (node != null)
                 {
                     File.AppendAllLines("xmpp.log", new string[] { node.NodeString("rx") });
@@ -461,7 +461,7 @@ namespace MissVenom
                         WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
                     }
 
-                    node = reader.nextTree();
+                    node = reader.nextTree(null, false);
                 }
             }
             catch (IncompleteMessageException e)
@@ -476,11 +476,11 @@ namespace MissVenom
         {
             try
             {
-                ProtocolTreeNode node = reader.nextTree(data);
+                ProtocolTreeNode node = reader.nextTree(data, true);
                 while (node != null)
                 {
                     File.AppendAllLines("xmpp.log", new string[] { node.NodeString("tx") });
-                    node = reader.nextTree();
+                    node = reader.nextTree(null, true);
                 }
             }
             catch (IncompleteMessageException e)
