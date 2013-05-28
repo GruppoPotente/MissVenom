@@ -23,7 +23,8 @@ namespace MissVenom
         private static TcpClient s_external;
         private TcpListener tcpl;
         private string password = string.Empty;
-        private static BinTreeNodeReader reader = new BinTreeNodeReader(WhatsAppApi.Helper.DecodeHelper.getDictionary());
+        private static BinTreeNodeReader ireader = new BinTreeNodeReader(WhatsAppApi.Helper.DecodeHelper.getDictionary());
+        private static BinTreeNodeReader ereader = new BinTreeNodeReader(WhatsAppApi.Helper.DecodeHelper.getDictionary());
 
         private string targetIP;
 
@@ -366,6 +367,9 @@ namespace MissVenom
                     s_external.ReceiveBufferSize = 1024;
                     byte[] extbuf = new byte[s_external.ReceiveBufferSize];
 
+                    WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
+                    WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
+
                     s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
                     s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
                 }
@@ -383,8 +387,23 @@ namespace MissVenom
                 byte[] buffer = result.AsyncState as byte[];
                 buffer = trimBuffer(buffer);
                 logRawData(buffer, "rx");
-                this.decodeInTree(buffer);
-                s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                try
+                {
+                    this.decodeInTree(buffer);
+                    s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                catch (Exception e)
+                {
+                    //invalidate buffer and force reauth
+                    //buffer = invalidateBuffer(buffer);
+                    if (e.Message == "Received encrypted message, encryption key not set")
+                    {
+                        this.AddListItem("Invalidated!");
+                        buffer = Convert.FromBase64String(this.password);
+                    }
+                    s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                
                 buffer = new byte[1024];
                 s_external.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveExtern, buffer);
             }
@@ -405,8 +424,23 @@ namespace MissVenom
                 byte[] buffer = result.AsyncState as byte[];
                 buffer = trimBuffer(buffer);
                 logRawData(buffer, "tx");
-                this.decodeOutTree(buffer);
-                s_external.GetStream().Write(buffer, 0, buffer.Length);
+                try
+                {
+                    this.decodeOutTree(buffer);
+                    s_external.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                catch (Exception e)
+                {
+                    //invalidate buffer and force reauth
+                    //buffer = invalidateBuffer(buffer);
+                    if (e.Message == "Received encrypted message, encryption key not set")
+                    {
+                        this.AddListItem("Invalidated!");
+                        buffer = Convert.FromBase64String(this.password);
+                    }
+                    s_external.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                
                 buffer = new byte[1024];
                 s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
             }
@@ -443,7 +477,12 @@ namespace MissVenom
         {
             try
             {
-                ProtocolTreeNode node = reader.nextTree(data, false);
+                ProtocolTreeNode node = ereader.nextTree(data, true);
+                try
+                {
+                    ProtocolTreeNode foo = ireader.nextTree(data, false);
+                }
+                catch (Exception ex) { }
                 while (node != null)
                 {
                     File.AppendAllLines("xmpp.log", new string[] { node.NodeString("rx") });
@@ -456,13 +495,19 @@ namespace MissVenom
                         byte[] pass = Convert.FromBase64String(this.password);
                         Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(pass, challengeData, 16);
                         byte[] key = r.GetBytes(20);
-                        reader.Encryptionkey = key;
+                        ireader.Encryptionkey = key;
+                        ereader.Encryptionkey = key;
                         //reset static keys
                         WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
                         WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
                     }
 
-                    node = reader.nextTree(null, false);
+                    node = ereader.nextTree(null, true);
+                    try
+                    {
+                        ProtocolTreeNode foo = ireader.nextTree(null, false);
+                    }
+                    catch (Exception ex) { }
                 }
             }
             catch (IncompleteMessageException e)
@@ -470,18 +515,28 @@ namespace MissVenom
             catch (Exception e)
             {
                 this.AddListItem("INDECODER ERROR: " + e.Message);
+                throw e;
             }
+        }
+
+        private byte[] invalidateBuffer(byte[] buffer)
+        {
+            if (buffer.Length > 0)
+            {
+                buffer = buffer.Reverse().ToArray(); ;
+            }
+            return buffer;
         }
 
         private void decodeOutTree(byte[] data)
         {
             try
             {
-                ProtocolTreeNode node = reader.nextTree(data, true);
+                ProtocolTreeNode node = ireader.nextTree(data, false);
                 while (node != null)
                 {
                     File.AppendAllLines("xmpp.log", new string[] { node.NodeString("tx") });
-                    node = reader.nextTree(null, true);
+                    node = ireader.nextTree(null, false);
                 }
             }
             catch (IncompleteMessageException e)
@@ -489,6 +544,7 @@ namespace MissVenom
             catch (Exception e)
             {
                 this.AddListItem("OUTDECODER ERROR: " + e.Message);
+                throw e;
             }
         }
 
