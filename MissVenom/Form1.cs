@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using WhatsAppApi.Helper;
 
@@ -188,6 +189,18 @@ namespace MissVenom
                 Stream responseStream = response.GetResponseStream();
                 StreamReader responseReader = new StreamReader(responseStream);
                 String data = responseReader.ReadToEnd();
+
+                //try to find password
+                if (e.Request.Uri.Authority == "v.whatsapp.net")
+                {
+                    JavaScriptSerializer jss = new JavaScriptSerializer();
+                    RegResponse reg = jss.Deserialize<RegResponse>(data);
+                    if (reg.status == "ok" && !String.IsNullOrEmpty(reg.pw))
+                    {
+                        this.AddListItem("FOUND PASSWORD!: " + reg.pw);
+                        this.password = reg.pw;
+                    }
+                }
 
                 byte[] data2 = Encoding.Default.GetBytes(data);
 
