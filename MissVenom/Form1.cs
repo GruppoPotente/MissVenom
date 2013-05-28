@@ -457,8 +457,9 @@ namespace MissVenom
                         Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(pass, challengeData, 16);
                         byte[] key = r.GetBytes(20);
                         reader.Encryptionkey = key;
-                        //reset static key
+                        //reset static keys
                         WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
+                        WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
                     }
 
                     node = reader.nextTree(null, false);
