@@ -192,6 +192,17 @@ namespace MissVenom
                     //contact sync auth header
                     e.Response.Add(new HttpServer.Headers.StringHeader("WWW-Authenticate", response.Headers["WWW-Authenticate"].ToString()));
                 }
+                if(response.Headers["X-WA-Metadata"] != null)
+                {
+                    //WA media type header
+                    e.Response.Add(new HttpServer.Headers.StringHeader("X-WA-Metadata", response.Headers["X-WA-Metadata"]));
+                    //save media:
+                    string filename = e.Request.Uri.AbsoluteUri.Split('/').Last();
+                    this.AddListItem("Saving media file to " + filename);
+                    FileStream f = File.OpenWrite(filename);
+                    f.Write(rawdata, 0, rawdata.Length);
+                    f.Close();
+                }
 
                 responseStream.Read(rawdata, 0, rawdata.Length);
                 String data = WhatsAppApi.WhatsApp.SYSEncoding.GetString(rawdata);
