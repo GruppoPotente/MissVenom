@@ -421,7 +421,7 @@ namespace MissVenom
                 catch (Exception e)
                 {
                     //invalidate buffer and force reauth
-                    if (e.Message == "Received encrypted message, encryption key not set")
+                    if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
                     {
                         this.AddListItem("Invalidated!");
                         buffer = Convert.FromBase64String(this.password);
@@ -460,7 +460,7 @@ namespace MissVenom
                 catch (Exception e)
                 {
                     //invalidate buffer and force reauth
-                    if (e.Message == "Received encrypted message, encryption key not set")
+                    if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
                     {
                         this.AddListItem("Invalidated!");
                         buffer = Convert.FromBase64String(this.password);
