@@ -78,12 +78,18 @@ namespace MissVenom
             {
                 DnsServer server = new DnsServer(System.Net.IPAddress.Any, 10, 10, onDnsQuery);
                 this.AddListItem("Started DNS proxy...");
+                server.ExceptionThrown += dnsServer_ExceptionThrown;
                 server.Start();
             }
             catch (Exception e)
             {
                 this.AddListItem("ERROR STARTING DNS SERVER: " + e.Message);
             }
+        }
+
+        private void dnsServer_ExceptionThrown(object sender, ARSoft.Tools.Net.Dns.ExceptionEventArgs e)
+        {
+            startDnsServer();
         }
 
         public Form1()
@@ -287,23 +293,30 @@ namespace MissVenom
                     }
                 }
                 // send query to upstream server
-                DnsQuestion question = query.Questions[0];
-                answer = DnsClient.Default.Resolve(question.Name, question.RecordType, question.RecordClass);
-
-                // if got an answer, copy it to the message sent to the client
-                if (answer != null)
+                try
                 {
-                    foreach (DnsRecordBase record in (answer.AnswerRecords))
-                    {
-                        query.AnswerRecords.Add(record);
-                    }
-                    foreach (DnsRecordBase record in (answer.AdditionalRecords))
-                    {
-                        query.AnswerRecords.Add(record);
-                    }
+                    DnsQuestion question = query.Questions[0];
+                    answer = DnsClient.Default.Resolve(question.Name, question.RecordType, question.RecordClass);
 
-                    query.ReturnCode = ReturnCode.NoError;
-                    return query;
+                    // if got an answer, copy it to the message sent to the client
+                    if (answer != null)
+                    {
+                        foreach (DnsRecordBase record in (answer.AnswerRecords))
+                        {
+                            query.AnswerRecords.Add(record);
+                        }
+                        foreach (DnsRecordBase record in (answer.AdditionalRecords))
+                        {
+                            query.AnswerRecords.Add(record);
+                        }
+
+                        query.ReturnCode = ReturnCode.NoError;
+                        return query;
+                    }
+                }
+                catch (Exception e)
+                {
+                    //argh, static method so I can't call this.AddListItem(), need to fix this later...
                 }
             }
             // Not a valid query or upstream server did not answer correct
