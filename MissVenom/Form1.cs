@@ -143,10 +143,6 @@ namespace MissVenom
                 {
                     request.ContentType = e.Request.ContentType.HeaderValue;
                 }
-                else
-                {
-                    request.ContentType = "application/x-www-form-urlencoded";
-                }
                 if (e.Request.Headers["User-Agent"] != null)
                 {
                     request.UserAgent = e.Request.Headers["User-Agent"].HeaderValue;
