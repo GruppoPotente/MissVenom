@@ -181,14 +181,16 @@ namespace MissVenom
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                 e.Response.ContentType.Value = response.ContentType;
                 e.Response.ContentLength.Value = response.ContentLength;
+                Stream responseStream = response.GetResponseStream();
+                byte[] rawdata = new byte[responseStream.Length];
                 if (response.Headers["WWW-Authenticate"] != null)
                 {
+                    //contact sync auth header
                     e.Response.Add(new HttpServer.Headers.StringHeader("WWW-Authenticate", response.Headers["WWW-Authenticate"].ToString()));
                 }
 
-                Stream responseStream = response.GetResponseStream();
-                StreamReader responseReader = new StreamReader(responseStream);
-                String data = responseReader.ReadToEnd();
+                responseStream.Read(rawdata, 0, rawdata.Length);
+                String data = WhatsAppApi.WhatsApp.SYSEncoding.GetString(rawdata);
 
                 //try to find password
                 if (e.Request.Uri.Authority == "v.whatsapp.net")
@@ -201,10 +203,7 @@ namespace MissVenom
                         this.password = reg.pw;
                     }
                 }
-
-                byte[] data2 = Encoding.Default.GetBytes(data);
-
-                e.Response.Body.Write(data2, 0, data2.Length);
+                e.Response.Body.Write(rawdata, 0, rawdata.Length);
 
                 this.AddListItem("USERAGENT:" + e.Request.Headers["User-Agent"].HeaderValue);
                 this.AddListItem("REQUEST:  " + e.Request.Uri.AbsoluteUri);
