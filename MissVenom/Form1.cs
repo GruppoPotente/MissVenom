@@ -178,7 +178,16 @@ namespace MissVenom
                 e.Response.ContentType.Value = response.ContentType;
                 e.Response.ContentLength.Value = response.ContentLength;
                 Stream responseStream = response.GetResponseStream();
-                byte[] rawdata = new byte[responseStream.Length];
+                byte[] rawdata = new byte[1024];
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    int read;
+                    while ((read = responseStream.Read(rawdata, 0, rawdata.Length)) > 0)
+                    {
+                        ms.Write(rawdata, 0, read);
+                    }
+                    rawdata = ms.ToArray();
+                }
                 if (response.Headers["WWW-Authenticate"] != null)
                 {
                     //contact sync auth header
