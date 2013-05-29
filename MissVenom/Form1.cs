@@ -436,7 +436,10 @@ namespace MissVenom
                 logRawData(buffer, "tx");
                 try
                 {
-                    this.decodeOutTree(buffer);
+                    if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
+                    {
+                        this.decodeOutTree(buffer);
+                    }
                     s_external.GetStream().Write(buffer, 0, buffer.Length);
                 }
                 catch (Exception e)
