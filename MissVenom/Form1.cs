@@ -159,10 +159,6 @@ namespace MissVenom
                 {
                     request.Headers.Add("Accept-Encoding", e.Request.Headers["Accept-Encoding"].HeaderValue);
                 }
-                if (e.Request.Connection != null)
-                {
-                    request.Connection = e.Request.Connection.HeaderValue;
-                }
                 if (e.Request.Body.Length > 0)
                 {
                     //copy body
