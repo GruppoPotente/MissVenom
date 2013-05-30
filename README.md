@@ -15,31 +15,26 @@ Not compatible with Android 2.x (does not support installing root certificates)
 
 ###Root/jailbread/unlock not required###
 
-Usage (> v1.1.4.0):
+Usage:
 To sniff password:
 - Make sure your mobile device is on the same WLAN subnet as your machine
 - Unregister WhatsApp app on your device (e.g. wipe app data)
-- Start MissVenom.exe
+- Launch  MissVenom.exe and press Start
 - Set DNS address on your device to the displayed IP address (in WiFi->Static IP configuration)
 - Open your device's browser and go to https://cert.whatsapp.net to install root certificate
 - Open and register WhatsApp on your device
 - Your identity and password will appear in MissVenom as well as in MissVenom.log
-- Don't forget to turn off static IP address and reconnect to WiFi afterward!
 
-To sniff data (v1.2.0.0):
+To sniff TCP data (experimental):
 - Make sure your mobile device is on the same WLAN subnet as your machine
-- Start MissVenom.exe
-- Enter the device password and press Start
+- Launch MissVenom.exe
+- Enter the device password, click the checkbox on the left and press Start
 - Set DNS address on your device to the displayed IP address (in WiFi->Static IP configuration)
 - Open WhatsApp
 - Data will be logged to multiple files
 
 TODO:
-- Deserialize GET and JSON for nice formatting (fancy fancy)
-- Parse password from HTTPS and automatically set it for decryption
-- Decrypt tx messages (client to server)
-- Fix decoding session initialization ("WA  " node)
+- Get proper key streams to decrypt all TCP messages (FML)
 - Sniff audio stream hack on WP7
-- Save intercepted media files
-- Force client to re-authenticate with new challenge key to decrypt data
+- Force client to re-authenticate with new challenge key to decrypt data (kind of working, needs optimization)
 - ARP spoofing (making your life easier, one commit at a time)
