@@ -379,12 +379,9 @@ namespace MissVenom
             }
 
             //start tcp relay
-            if (this.checkBox1.Checked)
-            {
-                Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
-                tcpr.IsBackground = true;
-                tcpr.Start();
-            }
+            Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
+            tcpr.IsBackground = true;
+            tcpr.Start();
 
             this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate");
         }
@@ -434,7 +431,10 @@ namespace MissVenom
                 logRawData(buffer, "rx");
                 try
                 {
-                    this.decodeInTree(buffer);
+                    if (this.checkBox1.Checked)
+                    {
+                        this.decodeInTree(buffer);
+                    }
                     s_internal.GetStream().Write(buffer, 0, buffer.Length);
                 }
                 catch (Exception e)
@@ -470,9 +470,12 @@ namespace MissVenom
                 logRawData(buffer, "tx");
                 try
                 {
-                    if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
+                    if (this.checkBox1.Checked)
                     {
-                        this.decodeOutTree(buffer);
+                        if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
+                        {
+                            this.decodeOutTree(buffer);
+                        }
                     }
                     s_external.GetStream().Write(buffer, 0, buffer.Length);
                 }
