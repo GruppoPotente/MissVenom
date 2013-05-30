@@ -277,7 +277,7 @@ namespace MissVenom
 
             if ((query != null) && (query.Questions.Count == 1))
             {
-                File.AppendAllLines("dns.log", new string[] { DateTime.Now.ToShortTimeString() + ": " +  query.Questions[0].Name});
+                //File.AppendAllLines("dns.log", new string[] { DateTime.Now.ToShortTimeString() + ": " +  query.Questions[0].Name});
                 //HOOK:
                 //resolve v.whatsapp.net and sro.whatsapp.net
                 if (query.Questions[0].RecordType == RecordType.A
@@ -317,7 +317,7 @@ namespace MissVenom
                 }
                 catch (Exception e)
                 {
-                    File.AppendAllLines("dns.log", new string[] { "DNS QUERY ERROR: " + e.Message } );
+                    //File.AppendAllLines("dns.log", new string[] { "DNS QUERY ERROR: " + e.Message } );
                 }
             }
             // Not a valid query or upstream server did not answer correct
