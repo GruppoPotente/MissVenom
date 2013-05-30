@@ -330,6 +330,7 @@ namespace MissVenom
             //disable stuff
             this.button1.Enabled = false;
             this.textBox2.Enabled = false;
+            this.checkBox1.Enabled = false;
 
             //start
             this.password = this.textBox2.Text;
@@ -378,9 +379,12 @@ namespace MissVenom
             }
 
             //start tcp relay
-            Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
-            tcpr.IsBackground = true;
-            tcpr.Start();
+            if (this.checkBox1.Checked)
+            {
+                Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
+                tcpr.IsBackground = true;
+                tcpr.Start();
+            }
 
             this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate");
         }
