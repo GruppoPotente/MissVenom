@@ -204,7 +204,7 @@ namespace MissVenom
                     //WA media type header
                     e.Response.Add(new HttpServer.Headers.StringHeader("X-WA-Metadata", response.Headers["X-WA-Metadata"]));
                     //save media:
-                    string filename = e.Request.Uri.AbsoluteUri.Split('/').Last();
+                    string filename = e.Request.Uri.AbsolutePath.Split('/').Last();
                     this.AddListItem("Saving media file to " + filename);
                     FileStream f = File.OpenWrite(filename);
                     f.Write(rawdata, 0, rawdata.Length);
