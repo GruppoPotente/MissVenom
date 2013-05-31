@@ -73,6 +73,16 @@ namespace MissVenom.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] Extensions {
+            get {
+                object obj = ResourceManager.GetObject("Extensions", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] HttpServer {
             get {
                 object obj = ResourceManager.GetObject("HttpServer", resourceCulture);

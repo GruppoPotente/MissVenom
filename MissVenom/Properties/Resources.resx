@@ -121,6 +121,9 @@
   <data name="ARSoft_Tools_Net" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Libraries\ARSoft.Tools.Net.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Extensions" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Libraries\Extensions.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="HttpServer" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Libraries\HttpServer.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
