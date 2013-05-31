@@ -1,6 +1,7 @@
 ﻿using ARSoft.Tools.Net.Dns;
 using HttpServer;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using WhatsAppApi.Helper;
 
@@ -217,12 +217,18 @@ namespace MissVenom
                 //try to find password
                 if (e.Request.Uri.Authority == "v.whatsapp.net")
                 {
-                    JavaScriptSerializer jss = new JavaScriptSerializer();
-                    RegResponse reg = jss.Deserialize<RegResponse>(data);
-                    if (reg.status == "ok" && !String.IsNullOrEmpty(reg.pw))
+                    try
                     {
-                        this.AddListItem("FOUND PASSWORD!: " + reg.pw);
-                        this.password = reg.pw;
+                        RegResponse reg = JsonConvert.DeserializeObject<RegResponse>(data);
+                        if (reg.status == "ok" && !String.IsNullOrEmpty(reg.pw))
+                        {
+                            this.AddListItem("FOUND PASSWORD!: " + reg.pw);
+                            this.password = reg.pw;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.AddListItem("ERROR DESERIALIZING JSON: " + ex.Message);
                     }
                 }
                 e.Response.Body.Write(rawdata, 0, rawdata.Length);
