@@ -13,6 +13,8 @@ Using WhatsApiNet library from http://github.com/shirioko/WhatsAPINet
 
 Not compatible with Android 2.x (does not support installing root certificates)
 
+Requires .NET Framework 4.0 Extended or .NET Framework 4.5!
+
 ###Root/jailbread/unlock not required###
 
 Usage:
