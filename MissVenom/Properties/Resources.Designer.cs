@@ -73,9 +73,9 @@ namespace MissVenom.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] Extensions {
+        internal static byte[] HttpServer {
             get {
-                object obj = ResourceManager.GetObject("Extensions", resourceCulture);
+                object obj = ResourceManager.GetObject("HttpServer", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace MissVenom.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] HttpServer {
+        internal static byte[] Newtonsoft_Json {
             get {
-                object obj = ResourceManager.GetObject("HttpServer", resourceCulture);
+                object obj = ResourceManager.GetObject("Newtonsoft_Json", resourceCulture);
                 return ((byte[])(obj));
             }
         }

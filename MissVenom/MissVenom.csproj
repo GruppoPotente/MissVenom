@@ -62,11 +62,13 @@
       <HintPath>Libraries\ARSoft.Tools.Net.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Extensions">
-      <HintPath>Libraries\Extensions.dll</HintPath>
-    </Reference>
     <Reference Include="HttpServer">
       <HintPath>Libraries\HttpServer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.0.5.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -123,6 +125,7 @@
     <EmbeddedResource Include="server.v2.crt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Libraries\Newtonsoft.Json.dll" />
     <Content Include="venom.ico" />
   </ItemGroup>
   <ItemGroup>
