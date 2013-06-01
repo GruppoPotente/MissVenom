@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Security.Principal;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MissVenom
@@ -43,7 +39,6 @@ namespace MissVenom
 
         private static bool RunElevated(string fileName)
         {
-            //MessageBox.Show("Run: " + fileName);
             ProcessStartInfo processInfo = new ProcessStartInfo();
             processInfo.Verb = "runas";
             processInfo.FileName = fileName;
