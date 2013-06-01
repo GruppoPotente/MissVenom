@@ -37,24 +37,6 @@ namespace MissVenom
             return null;
         }
 
-        private void SetRegIpForward()
-        {
-            try
-            {
-                RegistryKey key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", true);
-                if (key != null)
-                {
-                    key.SetValue("IPEnableRouter", 1);
-                    key.Close();
-                    this.AddListItem("Updated registry to forward traffic");
-                }
-            }
-            catch (Exception ex)
-            {
-                this.AddListItem("ERROR: Could not update registry. " + ex.Message);
-            }
-        }
-
         private byte[] getCertificate()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"all.whatsapp.net.pfx");
