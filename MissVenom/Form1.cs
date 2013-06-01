@@ -19,6 +19,10 @@ namespace MissVenom
 {
     public partial class Form1 : Form
     {
+        const string WA_SYNC_HOST = "sro.whatsapp.net";
+        const string WA_REG_HOST = "v.whatsapp.net";
+        const string WA_CERT_HOST = "cert.whatsapp.net";
+
         private static TcpClient s_internal;
         private static TcpClient s_external;
         private TcpListener tcpl;
@@ -108,7 +112,7 @@ namespace MissVenom
         {
             String url;
             //dev, for test on localhost:
-            if (e.Request.Uri.Authority.EndsWith(".whatsapp.net") && !e.Request.Uri.Authority.Equals("cert.whatsapp.net", StringComparison.InvariantCultureIgnoreCase))
+            if (e.Request.Uri.Authority.EndsWith(".whatsapp.net") && !e.Request.Uri.Authority.Equals(WA_CERT_HOST, StringComparison.InvariantCultureIgnoreCase))
             {
                 //use original
                 url = e.Request.Uri.AbsoluteUri;
@@ -196,7 +200,7 @@ namespace MissVenom
                 String data = WhatsAppApi.WhatsApp.SYSEncoding.GetString(rawdata);
 
                 //try to find password
-                if (e.Request.Uri.Authority == "v.whatsapp.net")
+                if (e.Request.Uri.Authority == WA_REG_HOST)
                 {
                     try
                     {
