@@ -64,7 +64,7 @@ namespace MissVenom
             }
             catch (Exception e)
             {
-                this.AddListItem("ERROR STARTING DNS SERVER: " + e.Message);
+                this.AddListItem(String.Format("ERROR STARTING DNS SERVER: {0}", e.Message));
             }
         }
 
@@ -90,7 +90,7 @@ namespace MissVenom
             }
             else
             {
-                this.textBox1.AppendText(data + "\r\n");
+                this.textBox1.AppendText(String.Format("{0}\r\n", data));
                 this.textBox1.DeselectAll();
                 //log to file
                 try
@@ -186,7 +186,7 @@ namespace MissVenom
                     e.Response.Add(new HttpServer.Headers.StringHeader("X-WA-Metadata", response.Headers["X-WA-Metadata"]));
                     //save media:
                     string filename = e.Request.Uri.AbsolutePath.Split('/').Last();
-                    this.AddListItem("Saving media file to " + filename);
+                    this.AddListItem(String.Format("Saving media file to {0}", filename));
                     FileStream f = File.OpenWrite(filename);
                     f.Write(rawdata, 0, rawdata.Length);
                     f.Close();
@@ -203,25 +203,25 @@ namespace MissVenom
                         RegResponse reg = JsonConvert.DeserializeObject<RegResponse>(data);
                         if (reg.status == "ok" && !String.IsNullOrEmpty(reg.pw))
                         {
-                            this.AddListItem("FOUND PASSWORD!: " + reg.pw);
+                            this.AddListItem(String.Format("FOUND PASSWORD!: {0}", reg.pw));
                             this.password = reg.pw;
                         }
                     }
                     catch (Exception ex)
                     {
-                        this.AddListItem("ERROR DESERIALIZING JSON: " + ex.Message);
+                        this.AddListItem(String.Format("ERROR DESERIALIZING JSON: {0}", ex.Message));
                     }
                 }
                 e.Response.Body.Write(rawdata, 0, rawdata.Length);
 
-                this.AddListItem("USERAGENT:" + e.Request.Headers["User-Agent"].HeaderValue);
-                this.AddListItem("REQUEST:  " + e.Request.Uri.AbsoluteUri);
-                this.AddListItem("RESPONSE: " + data);
+                this.AddListItem(String.Format("USERAGENT:{0}", e.Request.Headers["User-Agent"].HeaderValue));
+                this.AddListItem(String.Format("REQUEST:  {0}", e.Request.Uri.AbsoluteUri));
+                this.AddListItem(String.Format("RESPONSE: {0}", data));
                 this.AddListItem(" ");
             }
             catch (Exception ex)
             {
-                this.AddListItem("HTTPS REQUEST ERROR: " + ex.Message);
+                this.AddListItem(String.Format("HTTPS REQUEST ERROR: {0}", ex.Message));
             }
         }
 
@@ -264,9 +264,8 @@ namespace MissVenom
 
             if ((query != null) && (query.Questions.Count == 1))
             {
-                //File.AppendAllLines("dns.log", new string[] { DateTime.Now.ToShortTimeString() + ": " +  query.Questions[0].Name});
                 //HOOK:
-                //resolve v.whatsapp.net and sro.whatsapp.net
+                //resolve whatsapp.net subdomains
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
                     query.Questions[0].Name.EndsWith(".whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//rewrite ALL whatsapp.net subdomains
@@ -303,9 +302,7 @@ namespace MissVenom
                     }
                 }
                 catch (Exception e)
-                {
-                    //File.AppendAllLines("dns.log", new string[] { "DNS QUERY ERROR: " + e.Message } );
-                }
+                { }
             }
             // Not a valid query or upstream server did not answer correct
             message.ReturnCode = ReturnCode.ServerFailure;
@@ -322,7 +319,6 @@ namespace MissVenom
             //start
             this.password = this.textBox2.Text;
 
-            //this.SetRegIpForward();
             this.targetIP = GetIP().ToString();
             if (String.IsNullOrEmpty(this.targetIP))
             {
@@ -362,7 +358,7 @@ namespace MissVenom
             string[] ips = this.GetAllIPs();
             if (ips.Length > 1)
             {
-                this.AddListItem("WARNING: Multiple IP addresses found: " + String.Join(" ,", ips));
+                this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
             }
 
             //start tcp relay
@@ -370,7 +366,7 @@ namespace MissVenom
             tcpr.IsBackground = true;
             tcpr.Start();
 
-            this.AddListItem("Set your DNS address on your phone to " + ips.First() + " (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate");
+            this.AddListItem(String.Format("Set your DNS address on your phone to {0} (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate", ips.First()));
         }
 
         private void startTcpRelay()
@@ -405,7 +401,7 @@ namespace MissVenom
             }
             catch (Exception e)
             {
-                this.AddListItem("TCPRELAY STOPPED: " + e.Message);
+                this.AddListItem(String.Format("TCPRELAY STOPPED: {0}", e.Message));
             }
         }
 
@@ -444,7 +440,7 @@ namespace MissVenom
             }
             catch (Exception e)
             {
-                this.AddListItem("TCP EXT ERROR: " + e.Message);
+                this.AddListItem(String.Format("TCP EXT ERROR: {0}", e.Message));
             }
         }
 
@@ -481,12 +477,10 @@ namespace MissVenom
                 s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
             }
             catch (IndexOutOfRangeException e)
-            {
-
-            }
+            { }
             catch (Exception e)
             {
-                this.AddListItem("TCP INT ERROR: " + e.Message);
+                this.AddListItem(String.Format("TCP INT ERROR: {0}", e.Message));
             }
         }
 
@@ -540,7 +534,7 @@ namespace MissVenom
             { }
             catch (Exception e)
             {
-                this.AddListItem("INDECODER ERROR: " + e.Message);
+                this.AddListItem(String.Format("INDECODER ERROR: {0}", e.Message));
                 throw e;
             }
         }
@@ -560,7 +554,7 @@ namespace MissVenom
             { }
             catch (Exception e)
             {
-                this.AddListItem("OUTDECODER ERROR: " + e.Message);
+                this.AddListItem(String.Format("OUTDECODER ERROR: {0}", e.Message));
                 throw e;
             }
         }
