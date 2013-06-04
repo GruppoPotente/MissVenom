@@ -574,6 +574,13 @@ namespace MissVenom
         {
             //add instructions
             this.AddListItem("Enter your password (optional) and click Start to start MissVenom");
+            //add tooltip to checkbox
+            ToolTip tt = new ToolTip();
+            tt.AutoPopDelay = 5000;
+            tt.InitialDelay = 100;
+            tt.ReshowDelay = 100;
+            tt.ShowAlways = true;
+            tt.SetToolTip(this.checkBox1, "Check to enable TCP decoding/decryption");
         }
     }
 }
