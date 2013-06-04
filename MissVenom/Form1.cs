@@ -319,10 +319,17 @@ namespace MissVenom
             this.button1.Enabled = false;
             this.textBox2.Enabled = false;
             this.checkBox1.Enabled = false;
-
-            //start
             this.password = this.textBox2.Text;
 
+            //start working
+            Thread t = new Thread(new ThreadStart(startVenom));
+            t.IsBackground = true;
+            t.Start();
+        }
+
+        private void startVenom()
+        {
+            //do stuff
             this.targetIP = GetIP().ToString();
             if (String.IsNullOrEmpty(this.targetIP))
             {
