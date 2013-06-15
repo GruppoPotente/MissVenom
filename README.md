@@ -37,7 +37,6 @@ To sniff TCP data (experimental):
 
 TODO:
 - Crashes on multiple local IP addresses
-- Checkbox tooltip (or something similar)
 - Get proper key streams to decrypt all TCP messages (FML)
 - Sniff audio stream hack on WP7
 - Force client to re-authenticate with new challenge key to decrypt data (kind of working, needs optimization)
