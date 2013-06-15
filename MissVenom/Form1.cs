@@ -13,7 +13,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Windows.Forms;
-using WhatsAppApi.Helper;
 
 namespace MissVenom
 {
@@ -26,8 +25,6 @@ namespace MissVenom
         private static TcpClient s_internal;
         private static TcpClient s_external;
         private TcpListener tcpl;
-        private string password = string.Empty;
-        private static BinTreeNodeReader reader = new BinTreeNodeReader(WhatsAppApi.Helper.DecodeHelper.getDictionary());
 
         private string targetIP;
 
@@ -197,7 +194,7 @@ namespace MissVenom
                 }
 
                 responseStream.Read(rawdata, 0, rawdata.Length);
-                String data = WhatsAppApi.WhatsApp.SYSEncoding.GetString(rawdata);
+                String data = System.Text.Encoding.UTF8.GetString(rawdata);
 
                 //try to find password
                 if (e.Request.Uri.Authority == WA_REG_HOST)
@@ -208,7 +205,6 @@ namespace MissVenom
                         if (reg.status == "ok" && !String.IsNullOrEmpty(reg.pw))
                         {
                             this.AddListItem(String.Format("FOUND PASSWORD!: {0}", reg.pw));
-                            this.password = reg.pw;
                         }
                     }
                     catch (Exception ex)
@@ -272,7 +268,11 @@ namespace MissVenom
                 //resolve whatsapp.net subdomains
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
-                    query.Questions[0].Name.EndsWith(".whatsapp.net", StringComparison.InvariantCultureIgnoreCase)//rewrite ALL whatsapp.net subdomains
+                    (
+                        query.Questions[0].Name == WA_CERT_HOST
+                        ||
+                        query.Questions[0].Name == WA_REG_HOST
+                    )
                     )
                 {
                     query.ReturnCode = ReturnCode.NoError;
@@ -311,20 +311,6 @@ namespace MissVenom
             // Not a valid query or upstream server did not answer correct
             message.ReturnCode = ReturnCode.ServerFailure;
             return message;
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //disable stuff
-            this.button1.Enabled = false;
-            this.textBox2.Enabled = false;
-            this.checkBox1.Enabled = false;
-            this.password = this.textBox2.Text;
-
-            //start working
-            Thread t = new Thread(new ThreadStart(startVenom));
-            t.IsBackground = true;
-            t.Start();
         }
 
         private void startVenom()
@@ -372,215 +358,15 @@ namespace MissVenom
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
             }
 
-            //start tcp relay
-            Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
-            tcpr.IsBackground = true;
-            tcpr.Start();
-
             this.AddListItem(String.Format("Set your DNS address on your phone to {0} (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate", ips.First()));
-        }
-
-        private void startTcpRelay()
-        {
-            this.tcpl = new TcpListener(IPAddress.Any, 5222);
-            tcpl.Start();
-            this.AddListItem("Started TCP relay, waiting for connection...");
-
-            try
-            {
-                while (true)
-                {
-                    s_internal = this.tcpl.AcceptTcpClient();
-                    s_internal.ReceiveBufferSize = 1024;
-                    byte[] intbuf = new byte[s_internal.ReceiveBufferSize];
-                    this.AddListItem("Client connected!");
-                    if (s_external != null)
-                    {
-                        s_external.Close();
-                    }
-                    s_external = new TcpClient();
-                    s_external.Connect("c2.whatsapp.net", 5222);
-                    s_external.ReceiveBufferSize = 1024;
-                    byte[] extbuf = new byte[s_external.ReceiveBufferSize];
-
-                    WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
-                    WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
-
-                    s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
-                    s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
-                }
-            }
-            catch (Exception e)
-            {
-                this.AddListItem(String.Format("TCPRELAY STOPPED: {0}", e.Message));
-            }
-        }
-
-        private void onReceiveExtern(IAsyncResult result)
-        {
-            try
-            {
-                byte[] buffer = result.AsyncState as byte[];
-                buffer = trimBuffer(buffer);
-                logRawData(buffer, "rx");
-                try
-                {
-                    if (this.checkBox1.Checked)
-                    {
-                        this.decodeInTree(buffer);
-                    }
-                    s_internal.GetStream().Write(buffer, 0, buffer.Length);
-                }
-                catch (Exception e)
-                {
-                    //invalidate buffer and force reauth
-                    if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
-                    {
-                        this.AddListItem("Invalidated!");
-                        buffer = Convert.FromBase64String(this.password);
-                    }
-                    s_internal.GetStream().Write(buffer, 0, buffer.Length);
-                }
-                
-                buffer = new byte[1024];
-                s_external.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveExtern, buffer);
-            }
-            catch (IndexOutOfRangeException e)
-            {
-
-            }
-            catch (Exception e)
-            {
-                this.AddListItem(String.Format("TCP EXT ERROR: {0}", e.Message));
-            }
-        }
-
-        private void onReceiveIntern(IAsyncResult result)
-        {
-            try
-            {
-                byte[] buffer = result.AsyncState as byte[];
-                buffer = trimBuffer(buffer);
-                logRawData(buffer, "tx");
-                try
-                {
-                    if (this.checkBox1.Checked)
-                    {
-                        if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
-                        {
-                            this.decodeOutTree(buffer);
-                        }
-                    }
-                    s_external.GetStream().Write(buffer, 0, buffer.Length);
-                }
-                catch (Exception e)
-                {
-                    //invalidate buffer and force reauth
-                    if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
-                    {
-                        this.AddListItem("Invalidated!");
-                        buffer = Convert.FromBase64String(this.password);
-                    }
-                    s_external.GetStream().Write(buffer, 0, buffer.Length);
-                }
-                
-                buffer = new byte[1024];
-                s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
-            }
-            catch (IndexOutOfRangeException e)
-            { }
-            catch (Exception e)
-            {
-                this.AddListItem(String.Format("TCP INT ERROR: {0}", e.Message));
-            }
-        }
-
-        private static byte[] trimBuffer(byte[] buffer)
-        {
-            //trim null bytes
-            int i = buffer.Length - 1;
-            while (buffer[i] == 0)
-                --i;
-            byte[] bar = new byte[i + 1];
-            Array.Copy(buffer, bar, i + 1);
-            return bar;
-        }
-
-        private static void logRawData(byte[] data, string prefix)
-        {
-            string dat = Convert.ToBase64String(data);
-            File.AppendAllLines("b64raw.log", new string[] { dat });
-            dat = WhatsAppApi.WhatsApp.SYSEncoding.GetString(data);
-            File.AppendAllLines("raw.log", new string[] { dat });
-        }
-
-        private void decodeInTree(byte[] data)
-        {
-            try
-            {
-                ProtocolTreeNode node = reader.nextTree(data, true);
-                
-                while (node != null)
-                {
-                    File.AppendAllLines("xmpp.log", new string[] { node.NodeString("rx") });
-
-                    //look for challengedata and forge key
-                    if (node.tag.Equals("challenge", StringComparison.InvariantCultureIgnoreCase) && !String.IsNullOrEmpty(this.password))
-                    {
-                        this.AddListItem("ChallengeKey received, forging key...");
-                        byte[] challengeData = node.GetData();
-                        byte[] pass = Convert.FromBase64String(this.password);
-                        Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(pass, challengeData, 16);
-                        byte[] key = r.GetBytes(20);
-                        reader.Encryptionkey = key;
-                        //reset static keys
-                        WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
-                        WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
-                    }
-
-                    node = reader.nextTree(null, true);
-                }
-            }
-            catch (IncompleteMessageException e)
-            { }
-            catch (Exception e)
-            {
-                this.AddListItem(String.Format("INDECODER ERROR: {0}", e.Message));
-                throw e;
-            }
-        }
-
-        private void decodeOutTree(byte[] data)
-        {
-            try
-            {
-                ProtocolTreeNode node = reader.nextTree(data, false);
-                while (node != null)
-                {
-                    File.AppendAllLines("xmpp.log", new string[] { node.NodeString("tx") });
-                    node = reader.nextTree(null, false);
-                }
-            }
-            catch (IncompleteMessageException e)
-            { }
-            catch (Exception e)
-            {
-                this.AddListItem(String.Format("OUTDECODER ERROR: {0}", e.Message));
-                throw e;
-            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //add instructions
-            this.AddListItem("Enter your password (optional) and click Start to start MissVenom");
-            //add tooltip to checkbox
-            ToolTip tt = new ToolTip();
-            tt.AutoPopDelay = 5000;
-            tt.InitialDelay = 100;
-            tt.ReshowDelay = 100;
-            tt.ShowAlways = true;
-            tt.SetToolTip(this.checkBox1, "Check to enable TCP decoding/decryption");
+            //start working
+            Thread t = new Thread(new ThreadStart(startVenom));
+            t.IsBackground = true;
+            t.Start();
         }
     }
 }
