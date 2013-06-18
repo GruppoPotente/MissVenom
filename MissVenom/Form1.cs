@@ -272,6 +272,13 @@ namespace MissVenom
                         query.Questions[0].Name == WA_CERT_HOST
                         ||
                         query.Questions[0].Name == WA_REG_HOST
+                        ||
+                        (
+                            //media files
+                            query.Questions[0].Name.StartsWith("mms")
+                            &&
+                            query.Questions[0].Name.EndsWith("whatsapp.net")
+                        )
                     )
                     )
                 {
