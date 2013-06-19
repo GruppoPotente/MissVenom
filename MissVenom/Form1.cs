@@ -119,6 +119,7 @@ namespace MissVenom
                 //return certificate
                 byte[] cert = this.getClientCertificate();
                 e.Response.ContentType = new HttpServer.Headers.ContentTypeHeader("application/x-x509-ca-cert");
+                e.Response.Add(new HttpServer.Headers.StringHeader("Content-disposition", "attachment; filename=wapi.cer"));
                 e.Response.Body.Write(cert, 0, cert.Length);
                 return;
             }
