@@ -29,9 +29,9 @@ namespace MissVenom
         private static TcpClient s_external;
 
         private string password = string.Empty;
-        private bool enableDNS;
-        private bool enableARP;
-        private bool enableTCP;
+        private static bool enableDNS;
+        private static bool enableARP;
+        private static bool enableTCP;
         private static bool enableReg;
         private static bool enableMedia;
         private static bool enableSync;
@@ -350,7 +350,7 @@ namespace MissVenom
                 return;
             }
 
-            if (this.enableDNS)
+            if (Form1.enableDNS)
             {
                 //start DNS server
                 Thread srv = new Thread(new ThreadStart(startDnsServer));
@@ -388,13 +388,13 @@ namespace MissVenom
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
             }
 
-            if (this.enableARP)
+            if (Form1.enableARP)
             {
                 //start ARP spoofing
                 this.AddListItem("Starting ARP injector (ToDo)\r\n");
             }
 
-            if (this.enableTCP)
+            if (Form1.enableTCP)
             {
                 //start TCP proxy
                 this.AddListItem("Starting TCP proxy (ToDo)\r\n");
@@ -416,12 +416,12 @@ namespace MissVenom
             {
                 this.password = this.textBoxPasswd.Text;
             }
-            this.enableARP = this.checkBoxARP.Checked;
-            this.enableDNS = this.checkBoxDns.Checked;
+            Form1.enableARP = this.checkBoxARP.Checked;
+            Form1.enableDNS = this.checkBoxDns.Checked;
             Form1.enableMedia = this.checkBoxMedia.Checked;
             Form1.enableReg = this.checkBoxReg.Checked;
             Form1.enableSync = this.checkBoxSync.Checked;
-            this.enableTCP = this.checkBoxTCP.Checked;
+            Form1.enableTCP = this.checkBoxTCP.Checked;
 
             //disable stuff
             this.textBoxPasswd.Enabled = false;
