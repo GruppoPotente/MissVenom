@@ -21,6 +21,9 @@ namespace MissVenom
         const string WA_SYNC_HOST = "sro.whatsapp.net";
         const string WA_REG_HOST = "v.whatsapp.net";
         const string WA_CERT_HOST = "cert.whatsapp.net";
+        const string WA_CHAT_HOST1 = "c.whatsapp.net";
+        const string WA_CHAT_HOST2 = "c2.whatsapp.net";
+        const string WA_CHAT_HOST3 = "c3.whatsapp.net";
 
         private static TcpClient s_internal;
         private static TcpClient s_external;
