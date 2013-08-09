@@ -299,6 +299,18 @@ namespace MissVenom
                             &&
                             Form1.enableMedia
                         )
+                        ||
+                        (
+                            (
+                                query.Questions[0].Name == WA_CHAT_HOST1
+                                ||
+                                query.Questions[0].Name == WA_CHAT_HOST2
+                                ||
+                                query.Questions[0].Name == WA_CHAT_HOST3
+                            )
+                            &&
+                            Form1.enableTCP
+                        )
                     )
                     )
                 {
