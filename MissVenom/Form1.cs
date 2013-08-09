@@ -24,6 +24,15 @@ namespace MissVenom
 
         private static TcpClient s_internal;
         private static TcpClient s_external;
+
+        private string password = string.Empty;
+        private bool enableDNS;
+        private bool enableARP;
+        private bool enableTCP;
+        private static bool enableReg;
+        private static bool enableMedia;
+        private static bool enableSync;
+
         private TcpListener tcpl;
 
         private string targetIP;
@@ -84,15 +93,15 @@ namespace MissVenom
 
         private void AddListItem(String data)
         {
-            if (this.textBox1.InvokeRequired)
+            if (this.textBoxOutput.InvokeRequired)
             {
                 AddListItemCallback a = new AddListItemCallback(AddListItem);
                 this.Invoke(a, new object[] { data });
             }
             else
             {
-                this.textBox1.AppendText(String.Format("{0}\r\n", data));
-                this.textBox1.DeselectAll();
+                this.textBoxOutput.AppendText(String.Format("{0}\r\n", data));
+                this.textBoxOutput.DeselectAll();
                 //log to file
                 try
                 {
@@ -265,20 +274,27 @@ namespace MissVenom
 
             if ((query != null) && (query.Questions.Count == 1))
             {
+                //log
+                File.AppendAllLines("VenomDNS.log", new String[] { String.Format("DNS QUERY FROM {0} FOR {1}", clientAddress.ToString(), query.Questions[0].Name) });
+
                 //HOOK:
                 //resolve whatsapp.net subdomains
                 if (query.Questions[0].RecordType == RecordType.A
                     &&
                     (
-                        query.Questions[0].Name == WA_CERT_HOST
+                        (query.Questions[0].Name == WA_CERT_HOST)
                         ||
-                        query.Questions[0].Name == WA_REG_HOST
+                        (query.Questions[0].Name == WA_REG_HOST && Form1.enableReg)
+                        ||
+                        (query.Questions[0].Name == WA_SYNC_HOST && Form1.enableSync)
                         ||
                         (
                             //media files
                             query.Questions[0].Name.StartsWith("mms")
                             &&
                             query.Questions[0].Name.EndsWith("whatsapp.net")
+                            &&
+                            Form1.enableMedia
                         )
                     )
                     )
@@ -331,10 +347,13 @@ namespace MissVenom
                 return;
             }
 
-            //start DNS server
-            Thread srv = new Thread(new ThreadStart(startDnsServer));
-            srv.IsBackground = true;
-            srv.Start();
+            if (this.enableDNS)
+            {
+                //start DNS server
+                Thread srv = new Thread(new ThreadStart(startDnsServer));
+                srv.IsBackground = true;
+                srv.Start();
+            }
 
             //start HTTPS server
             var certificate = new X509Certificate2(this.getCertificate(), "banana");
@@ -366,11 +385,51 @@ namespace MissVenom
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
             }
 
+            if (this.enableARP)
+            {
+                //start ARP spoofing
+                this.AddListItem("Starting ARP injector (ToDo)\r\n");
+            }
+
+            if (this.enableTCP)
+            {
+                //start TCP proxy
+                this.AddListItem("Starting TCP proxy (ToDo)\r\n");
+            }
+
             this.AddListItem(String.Format("Set your DNS address on your phone to {0} (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate", ips.First()));
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            
+        }
+
+        private void buttonStart_Click(object sender, EventArgs e)
+        {
+            //process stuff
+            this.buttonStart.Enabled = false;
+            if (!String.IsNullOrEmpty(this.textBoxPasswd.Text))
+            {
+                this.password = this.textBoxPasswd.Text;
+            }
+            this.enableARP = this.checkBoxARP.Checked;
+            this.enableDNS = this.checkBoxDns.Checked;
+            Form1.enableMedia = this.checkBoxMedia.Checked;
+            Form1.enableReg = this.checkBoxReg.Checked;
+            Form1.enableSync = this.checkBoxSync.Checked;
+            this.enableTCP = this.checkBoxTCP.Checked;
+
+            //disable stuff
+            this.textBoxPasswd.Enabled = false;
+            this.checkBoxARP.Enabled = false;
+            this.checkBoxDns.Enabled = false;
+            this.checkBoxMedia.Enabled = false;
+            this.checkBoxReg.Enabled = false;
+            this.checkBoxSync.Enabled = false;
+            this.checkBoxTCP.Enabled = false;
+            this.buttonStart.Enabled = false;
+
             //start working
             Thread t = new Thread(new ThreadStart(startVenom));
             t.IsBackground = true;
