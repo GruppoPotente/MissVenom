@@ -410,10 +410,146 @@ namespace MissVenom
             if (Form1.enableTCP)
             {
                 //start TCP proxy
-                this.AddListItem("Starting TCP proxy (ToDo)\r\n");
+                Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
+                tcpr.IsBackground = true;
+                tcpr.Start();
             }
 
             this.AddListItem(String.Format("Set your DNS address on your phone to {0} (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate", ips.First()));
+        }
+
+        private void startTcpRelay()
+        {
+            this.tcpl = new TcpListener(IPAddress.Any, 5222);
+            tcpl.Start();
+            this.AddListItem("Started TCP relay, waiting for connection...");
+
+            try
+            {
+                while (true)
+                {
+                    s_internal = this.tcpl.AcceptTcpClient();
+                    s_internal.ReceiveBufferSize = 1024;
+                    byte[] intbuf = new byte[s_internal.ReceiveBufferSize];
+                    this.AddListItem("Client connected!");
+                    if (s_external != null)
+                    {
+                        s_external.Close();
+                    }
+                    s_external = new TcpClient();
+                    s_external.Connect("c.whatsapp.net", 5222);
+                    s_external.ReceiveBufferSize = 1024;
+                    byte[] extbuf = new byte[s_external.ReceiveBufferSize];
+
+                    //WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
+                    //WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
+
+                    s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
+                    s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
+                }
+            }
+            catch (Exception e)
+            {
+                this.AddListItem(String.Format("TCPRELAY STOPPED: {0}", e.Message));
+            }
+        }
+
+        private void onReceiveExtern(IAsyncResult result)
+        {
+            try
+            {
+                byte[] buffer = result.AsyncState as byte[];
+                buffer = trimBuffer(buffer);
+                logRawData(buffer, "rx");
+                try
+                {
+                    //if (this.checkBox1.Checked)
+                    //{
+                    //    this.decodeInTree(buffer);
+                    //}
+                    s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                catch (Exception e)
+                {
+                    //invalidate buffer and force reauth
+                    //if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
+                    //{
+                    //    this.AddListItem("Invalidated!");
+                    //    buffer = Convert.FromBase64String(this.password);
+                    //}
+                    //s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                
+                buffer = new byte[1024];
+                s_external.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveExtern, buffer);
+            }
+            catch (IndexOutOfRangeException e)
+            {
+
+            }
+            catch (Exception e)
+            {
+                this.AddListItem(String.Format("TCP EXT ERROR: {0}", e.Message));
+            }
+        }
+
+        private void onReceiveIntern(IAsyncResult result)
+        {
+            try
+            {
+                byte[] buffer = result.AsyncState as byte[];
+                buffer = trimBuffer(buffer);
+                logRawData(buffer, "tx");
+                try
+                {
+                    //if (this.checkBox1.Checked)
+                    //{
+                    //    if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
+                    //    {
+                    //        this.decodeOutTree(buffer);
+                    //    }
+                    //}
+                    s_external.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                catch (Exception e)
+                {
+                    //invalidate buffer and force reauth
+                    //if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
+                    //{
+                    //    this.AddListItem("Invalidated!");
+                    //    buffer = Convert.FromBase64String(this.password);
+                    //}
+                    //s_external.GetStream().Write(buffer, 0, buffer.Length);
+                }
+                
+                buffer = new byte[1024];
+                s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
+            }
+            catch (IndexOutOfRangeException e)
+            { }
+            catch (Exception e)
+            {
+                this.AddListItem(String.Format("TCP INT ERROR: {0}", e.Message));
+            }
+        }
+
+        private static byte[] trimBuffer(byte[] buffer)
+        {
+            //trim null bytes
+            int i = buffer.Length - 1;
+            while (buffer[i] == 0)
+                --i;
+            byte[] bar = new byte[i + 1];
+            Array.Copy(buffer, bar, i + 1);
+            return bar;
+        }
+
+        private static void logRawData(byte[] data, string prefix)
+        {
+            string dat = Convert.ToBase64String(data);
+            File.AppendAllLines("b64raw.log", new string[] { dat });
+            //dat = WhatsAppApi.WhatsApp.SYSEncoding.GetString(data);
+            //File.AppendAllLines("raw.log", new string[] { dat });
         }
 
         private void Form1_Load(object sender, EventArgs e)
