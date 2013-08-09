@@ -81,6 +81,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="WhatsAppApi">
+      <HintPath>Libraries\WhatsAppApi.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Context.cs" />
@@ -121,6 +124,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Libraries\Newtonsoft.Json.dll" />
+    <Content Include="Libraries\ARSoft.Tools.Net.dll" />
+    <Content Include="Libraries\HttpServer.dll" />
+    <Content Include="Libraries\WhatsAppApi.dll" />
     <Content Include="venom.ico" />
   </ItemGroup>
   <ItemGroup>
