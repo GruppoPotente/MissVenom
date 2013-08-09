@@ -218,6 +218,7 @@ namespace MissVenom
                         if (reg.status == "ok" && !String.IsNullOrEmpty(reg.pw))
                         {
                             this.AddListItem(String.Format("FOUND PASSWORD!: {0}", reg.pw));
+                            this.password = reg.pw;
                         }
                     }
                     catch (Exception ex)
