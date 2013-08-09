@@ -83,6 +83,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="WhatsAppApi">
       <HintPath>Libraries\WhatsAppApi.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>

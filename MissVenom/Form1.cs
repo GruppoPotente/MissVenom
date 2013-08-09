@@ -14,6 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Windows.Forms;
 using WhatsAppApi;
+using WhatsAppApi.Helper;
 
 namespace MissVenom
 {
@@ -38,6 +39,8 @@ namespace MissVenom
         private static bool enableSync;
 
         private TcpListener tcpl;
+
+        private static BinTreeNodeReader reader = new BinTreeNodeReader(WhatsAppApi.Helper.DecodeHelper.getDictionary());
 
         private string targetIP;
 
@@ -442,8 +445,8 @@ namespace MissVenom
                     s_external.ReceiveBufferSize = 1024;
                     byte[] extbuf = new byte[s_external.ReceiveBufferSize];
 
-                    //WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
-                    //WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
+                    WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
+                    WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
 
                     s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
                     s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
@@ -464,21 +467,18 @@ namespace MissVenom
                 logRawData(buffer, "rx");
                 try
                 {
-                    //if (this.checkBox1.Checked)
-                    //{
-                    //    this.decodeInTree(buffer);
-                    //}
+                    this.decodeInTree(buffer);
                     s_internal.GetStream().Write(buffer, 0, buffer.Length);
                 }
                 catch (Exception e)
                 {
                     //invalidate buffer and force reauth
-                    //if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
-                    //{
-                    //    this.AddListItem("Invalidated!");
-                    //    buffer = Convert.FromBase64String(this.password);
-                    //}
-                    //s_internal.GetStream().Write(buffer, 0, buffer.Length);
+                    if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
+                    {
+                        this.AddListItem("Invalidated!");
+                        buffer = Convert.FromBase64String(this.password);
+                    }
+                    s_internal.GetStream().Write(buffer, 0, buffer.Length);
                 }
                 
                 buffer = new byte[1024];
@@ -503,24 +503,21 @@ namespace MissVenom
                 logRawData(buffer, "tx");
                 try
                 {
-                    //if (this.checkBox1.Checked)
-                    //{
-                    //    if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
-                    //    {
-                    //        this.decodeOutTree(buffer);
-                    //    }
-                    //}
+                    if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
+                    {
+                        this.decodeOutTree(buffer);
+                    }
                     s_external.GetStream().Write(buffer, 0, buffer.Length);
                 }
                 catch (Exception e)
                 {
                     //invalidate buffer and force reauth
-                    //if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
-                    //{
-                    //    this.AddListItem("Invalidated!");
-                    //    buffer = Convert.FromBase64String(this.password);
-                    //}
-                    //s_external.GetStream().Write(buffer, 0, buffer.Length);
+                    if (e.Message == "Received encrypted message, encryption key not set" && !String.IsNullOrEmpty(this.password))
+                    {
+                        this.AddListItem("Invalidated!");
+                        buffer = Convert.FromBase64String(this.password);
+                    }
+                    s_external.GetStream().Write(buffer, 0, buffer.Length);
                 }
                 
                 buffer = new byte[1024];
@@ -531,6 +528,62 @@ namespace MissVenom
             catch (Exception e)
             {
                 this.AddListItem(String.Format("TCP INT ERROR: {0}", e.Message));
+            }
+        }
+
+        private void decodeInTree(byte[] data)
+        {
+            try
+            {
+                ProtocolTreeNode node = reader.nextTree(data, true);
+                
+                while (node != null)
+                {
+                    File.AppendAllLines("xmpp.log", new string[] { node.NodeString("rx") });
+
+                    //look for challengedata and forge key
+                    if (node.tag.Equals("challenge", StringComparison.InvariantCultureIgnoreCase) && !String.IsNullOrEmpty(this.password))
+                    {
+                        this.AddListItem("ChallengeKey received, forging key...");
+                        byte[] challengeData = node.GetData();
+                        byte[] pass = Convert.FromBase64String(this.password);
+                        Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(pass, challengeData, 16);
+                        byte[] key = r.GetBytes(20);
+                        reader.Encryptionkey = key;
+                        //reset static keys
+                        WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
+                        WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
+                    }
+
+                    node = reader.nextTree(null, true);
+                }
+            }
+            catch (IncompleteMessageException e)
+            { }
+            catch (Exception e)
+            {
+                this.AddListItem(String.Format("INDECODER ERROR: {0}", e.Message));
+                throw e;
+            }
+        }
+
+        private void decodeOutTree(byte[] data)
+        {
+            try
+            {
+                ProtocolTreeNode node = reader.nextTree(data, false);
+                while (node != null)
+                {
+                    File.AppendAllLines("xmpp.log", new string[] { node.NodeString("tx") });
+                    node = reader.nextTree(null, false);
+                }
+            }
+            catch (IncompleteMessageException e)
+            { }
+            catch (Exception e)
+            {
+                this.AddListItem(String.Format("OUTDECODER ERROR: {0}", e.Message));
+                throw e;
             }
         }
 
