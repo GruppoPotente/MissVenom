@@ -41,7 +41,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -69,6 +69,22 @@
     <Reference Include="Newtonsoft.Json, Version=4.0.5.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Libraries\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PcapDotNet.Base">
+      <HintPath>Libraries\PcapDotNet.Base.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PcapDotNet.Core">
+      <HintPath>Libraries\PcapDotNet.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PcapDotNet.Core.Extensions">
+      <HintPath>Libraries\PcapDotNet.Core.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PcapDotNet.Packets">
+      <HintPath>Libraries\PcapDotNet.Packets.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -127,6 +143,10 @@
     <None Include="Libraries\Newtonsoft.Json.dll" />
     <Content Include="Libraries\ARSoft.Tools.Net.dll" />
     <Content Include="Libraries\HttpServer.dll" />
+    <None Include="Libraries\PcapDotNet.Base.dll" />
+    <None Include="Libraries\PcapDotNet.Core.dll" />
+    <None Include="Libraries\PcapDotNet.Core.Extensions.dll" />
+    <None Include="Libraries\PcapDotNet.Packets.dll" />
     <Content Include="Libraries\WhatsAppApi.dll" />
     <Content Include="venom.ico" />
   </ItemGroup>
