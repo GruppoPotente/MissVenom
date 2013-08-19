@@ -611,6 +611,18 @@ namespace MissVenom
             
         }
 
+        private void EnableDisableControls(bool enableDisable)
+        {
+            this.textBoxPasswd.Enabled = enableDisable;
+            this.checkBoxARP.Enabled = enableDisable;
+            this.checkBoxDns.Enabled = enableDisable;
+            this.checkBoxMedia.Enabled = enableDisable;
+            this.checkBoxReg.Enabled = enableDisable;
+            this.checkBoxSync.Enabled = enableDisable;
+            this.checkBoxTCP.Enabled = enableDisable;
+            this.buttonStart.Enabled = enableDisable;
+        }
+
         private void buttonStart_Click(object sender, EventArgs e)
         {
             //process stuff
@@ -627,14 +639,7 @@ namespace MissVenom
             frmMain.enableTCP = this.checkBoxTCP.Checked;
 
             //disable stuff
-            this.textBoxPasswd.Enabled = false;
-            this.checkBoxARP.Enabled = false;
-            this.checkBoxDns.Enabled = false;
-            this.checkBoxMedia.Enabled = false;
-            this.checkBoxReg.Enabled = false;
-            this.checkBoxSync.Enabled = false;
-            this.checkBoxTCP.Enabled = false;
-            this.buttonStart.Enabled = false;
+            EnableDisableControls(false);
 
             //start working
             Thread t = new Thread(new ThreadStart(StartVenom));
