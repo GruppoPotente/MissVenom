@@ -44,7 +44,7 @@ namespace MissVenom
 
         private string targetIP;
 
-        public static string resolveHost(string hostname)
+        public static string ResolveHost(string hostname)
         {
             IPHostEntry ips = Dns.GetHostEntry(hostname);
             if (ips != null && ips.AddressList != null && ips.AddressList.Length > 0)
@@ -54,7 +54,7 @@ namespace MissVenom
             return null;
         }
 
-        private byte[] getCertificate()
+        private byte[] GetCertificate()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"all.whatsapp.net.pfx");
             var bytes = new byte[stream.Length];
@@ -62,7 +62,7 @@ namespace MissVenom
             return bytes;
         }
 
-        private byte[] getClientCertificate()
+        private byte[] GetClientCertificate()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(GetType(), @"server.v2.crt");
             var bytes = new byte[stream.Length];
@@ -70,13 +70,13 @@ namespace MissVenom
             return bytes;
         }
 
-        protected void startDnsServer()
+        protected void StartDnsServer()
         {
             try
             {
-                DnsServer server = new DnsServer(System.Net.IPAddress.Any, 10, 10, onDnsQuery);
+                DnsServer server = new DnsServer(System.Net.IPAddress.Any, 10, 10, OnDnsQuery);
                 this.AddListItem("Started DNS proxy...");
-                server.ExceptionThrown += dnsServer_ExceptionThrown;
+                server.ExceptionThrown += DnsServer_ExceptionThrown;
                 server.Start();
             }
             catch (Exception e)
@@ -85,9 +85,9 @@ namespace MissVenom
             }
         }
 
-        private void dnsServer_ExceptionThrown(object sender, ARSoft.Tools.Net.Dns.ExceptionEventArgs e)
+        private void DnsServer_ExceptionThrown(object sender, ARSoft.Tools.Net.Dns.ExceptionEventArgs e)
         {
-            startDnsServer();
+            StartDnsServer();
         }
 
         public frmMain()
@@ -121,7 +121,7 @@ namespace MissVenom
             }
         }
 
-        private void onHttpsRequest(object sender, RequestEventArgs e)
+        private void OnHttpsRequest(object sender, RequestEventArgs e)
         {
             String url;
             //dev, for test on localhost:
@@ -133,7 +133,7 @@ namespace MissVenom
             else
             {
                 //return certificate
-                byte[] cert = this.getClientCertificate();
+                byte[] cert = this.GetClientCertificate();
                 e.Response.ContentType = new HttpServer.Headers.ContentTypeHeader("application/x-x509-ca-cert");
                 e.Response.Add(new HttpServer.Headers.StringHeader("Content-disposition", "attachment; filename=wapi.cer"));
                 e.Response.Body.Write(cert, 0, cert.Length);
@@ -273,7 +273,7 @@ namespace MissVenom
             return res.ToArray();
         }
 
-        static DnsMessageBase onDnsQuery(DnsMessageBase message, System.Net.IPAddress clientAddress, ProtocolType protocol)
+        static DnsMessageBase OnDnsQuery(DnsMessageBase message, System.Net.IPAddress clientAddress, ProtocolType protocol)
         {
             message.IsQuery = false;
 
@@ -357,7 +357,7 @@ namespace MissVenom
             return message;
         }
 
-        private void startVenom()
+        private void StartVenom()
         {
             //do stuff
             this.targetIP = GetIP().ToString();
@@ -370,18 +370,18 @@ namespace MissVenom
             if (frmMain.enableDNS)
             {
                 //start DNS server
-                Thread srv = new Thread(new ThreadStart(startDnsServer));
+                Thread srv = new Thread(new ThreadStart(StartDnsServer));
                 srv.IsBackground = true;
                 srv.Start();
             }
 
             //start HTTPS server
-            var certificate = new X509Certificate2(this.getCertificate(), "banana");
+            var certificate = new X509Certificate2(this.GetCertificate(), "banana");
             try
             {
                 var listener = (SecureHttpListener)HttpServer.HttpListener.Create(System.Net.IPAddress.Any, 443, certificate);
                 listener.UseClientCertificate = true;
-                listener.RequestReceived += onHttpsRequest;
+                listener.RequestReceived += OnHttpsRequest;
                 listener.Start(5);
                 this.AddListItem("SSL proxy started");
                 this.AddListItem("Listening...");
@@ -414,7 +414,7 @@ namespace MissVenom
             if (frmMain.enableTCP)
             {
                 //start TCP proxy
-                Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
+                Thread tcpr = new Thread(new ThreadStart(StartTcpRelay));
                 tcpr.IsBackground = true;
                 tcpr.Start();
             }
@@ -422,7 +422,7 @@ namespace MissVenom
             this.AddListItem(String.Format("Set your DNS address on your phone to {0} (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate", ips.First()));
         }
 
-        private void startTcpRelay()
+        private void StartTcpRelay()
         {
             this.tcpl = new TcpListener(IPAddress.Any, 5222);
             tcpl.Start();
@@ -448,8 +448,8 @@ namespace MissVenom
                     WhatsAppApi.Helper.Encryption.encryptionIncoming = null;
                     WhatsAppApi.Helper.Encryption.encryptionOutgoing = null;
 
-                    s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, onReceiveIntern, intbuf);
-                    s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, onReceiveExtern, extbuf);
+                    s_internal.GetStream().BeginRead(intbuf, 0, intbuf.Length, OnReceiveIntern, intbuf);
+                    s_external.GetStream().BeginRead(extbuf, 0, extbuf.Length, OnReceiveExtern, extbuf);
                 }
             }
             catch (Exception e)
@@ -458,16 +458,16 @@ namespace MissVenom
             }
         }
 
-        private void onReceiveExtern(IAsyncResult result)
+        private void OnReceiveExtern(IAsyncResult result)
         {
             try
             {
                 byte[] buffer = result.AsyncState as byte[];
-                buffer = trimBuffer(buffer);
-                logRawData(buffer, "rx");
+                buffer = TrimBuffer(buffer);
+                LogRawData(buffer, "rx");
                 try
                 {
-                    this.decodeInTree(buffer);
+                    this.DecodeInTree(buffer);
                     s_internal.GetStream().Write(buffer, 0, buffer.Length);
                 }
                 catch (Exception e)
@@ -482,7 +482,7 @@ namespace MissVenom
                 }
                 
                 buffer = new byte[1024];
-                s_external.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveExtern, buffer);
+                s_external.GetStream().BeginRead(buffer, 0, buffer.Length, OnReceiveExtern, buffer);
             }
             catch (IndexOutOfRangeException e)
             {
@@ -494,18 +494,18 @@ namespace MissVenom
             }
         }
 
-        private void onReceiveIntern(IAsyncResult result)
+        private void OnReceiveIntern(IAsyncResult result)
         {
             try
             {
                 byte[] buffer = result.AsyncState as byte[];
-                buffer = trimBuffer(buffer);
-                logRawData(buffer, "tx");
+                buffer = TrimBuffer(buffer);
+                LogRawData(buffer, "tx");
                 try
                 {
                     if (!(buffer[0] == 'W' && buffer[1] == 'A'))//don't bother decoding WA stream start
                     {
-                        this.decodeOutTree(buffer);
+                        this.DecodeOutTree(buffer);
                     }
                     s_external.GetStream().Write(buffer, 0, buffer.Length);
                 }
@@ -521,7 +521,7 @@ namespace MissVenom
                 }
                 
                 buffer = new byte[1024];
-                s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, onReceiveIntern, buffer);
+                s_internal.GetStream().BeginRead(buffer, 0, buffer.Length, OnReceiveIntern, buffer);
             }
             catch (IndexOutOfRangeException e)
             { }
@@ -531,7 +531,7 @@ namespace MissVenom
             }
         }
 
-        private void decodeInTree(byte[] data)
+        private void DecodeInTree(byte[] data)
         {
             try
             {
@@ -567,7 +567,7 @@ namespace MissVenom
             }
         }
 
-        private void decodeOutTree(byte[] data)
+        private void DecodeOutTree(byte[] data)
         {
             try
             {
@@ -587,7 +587,7 @@ namespace MissVenom
             }
         }
 
-        private static byte[] trimBuffer(byte[] buffer)
+        private static byte[] TrimBuffer(byte[] buffer)
         {
             //trim null bytes
             int i = buffer.Length - 1;
@@ -598,7 +598,7 @@ namespace MissVenom
             return bar;
         }
 
-        private static void logRawData(byte[] data, string prefix)
+        private static void LogRawData(byte[] data, string prefix)
         {
             string dat = Convert.ToBase64String(data);
             File.AppendAllLines("b64raw.log", new string[] { dat });
@@ -637,7 +637,7 @@ namespace MissVenom
             this.buttonStart.Enabled = false;
 
             //start working
-            Thread t = new Thread(new ThreadStart(startVenom));
+            Thread t = new Thread(new ThreadStart(StartVenom));
             t.IsBackground = true;
             t.Start();
         }
