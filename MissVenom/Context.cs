@@ -15,7 +15,7 @@ namespace MissVenom
 
         public void Run()
         {
-            Application.Run(new Form1());
+            Application.Run(new frmMain());
         }
 
         System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
