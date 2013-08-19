@@ -18,7 +18,7 @@ using WhatsAppApi.Helper;
 
 namespace MissVenom
 {
-    public partial class Form1 : Form
+    public partial class frmMain : Form
     {
         const string WA_SYNC_HOST = "sro.whatsapp.net";
         const string WA_REG_HOST = "v.whatsapp.net";
@@ -90,7 +90,7 @@ namespace MissVenom
             startDnsServer();
         }
 
-        public Form1()
+        public frmMain()
         {
             InitializeComponent();
         }
@@ -292,9 +292,9 @@ namespace MissVenom
                     (
                         (query.Questions[0].Name == WA_CERT_HOST)
                         ||
-                        (query.Questions[0].Name == WA_REG_HOST && Form1.enableReg)
+                        (query.Questions[0].Name == WA_REG_HOST && frmMain.enableReg)
                         ||
-                        (query.Questions[0].Name == WA_SYNC_HOST && Form1.enableSync)
+                        (query.Questions[0].Name == WA_SYNC_HOST && frmMain.enableSync)
                         ||
                         (
                             //media files
@@ -302,7 +302,7 @@ namespace MissVenom
                             &&
                             query.Questions[0].Name.EndsWith("whatsapp.net")
                             &&
-                            Form1.enableMedia
+                            frmMain.enableMedia
                         )
                         ||
                         (
@@ -314,7 +314,7 @@ namespace MissVenom
                                 query.Questions[0].Name == WA_CHAT_HOST3
                             )
                             &&
-                            Form1.enableTCP
+                            frmMain.enableTCP
                         )
                     )
                     )
@@ -367,7 +367,7 @@ namespace MissVenom
                 return;
             }
 
-            if (Form1.enableDNS)
+            if (frmMain.enableDNS)
             {
                 //start DNS server
                 Thread srv = new Thread(new ThreadStart(startDnsServer));
@@ -405,13 +405,13 @@ namespace MissVenom
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
             }
 
-            if (Form1.enableARP)
+            if (frmMain.enableARP)
             {
                 //start ARP spoofing
                 this.AddListItem("Starting ARP injector (ToDo)\r\n");
             }
 
-            if (Form1.enableTCP)
+            if (frmMain.enableTCP)
             {
                 //start TCP proxy
                 Thread tcpr = new Thread(new ThreadStart(startTcpRelay));
@@ -619,12 +619,12 @@ namespace MissVenom
             {
                 this.password = this.textBoxPasswd.Text;
             }
-            Form1.enableARP = this.checkBoxARP.Checked;
-            Form1.enableDNS = this.checkBoxDns.Checked;
-            Form1.enableMedia = this.checkBoxMedia.Checked;
-            Form1.enableReg = this.checkBoxReg.Checked;
-            Form1.enableSync = this.checkBoxSync.Checked;
-            Form1.enableTCP = this.checkBoxTCP.Checked;
+            frmMain.enableARP = this.checkBoxARP.Checked;
+            frmMain.enableDNS = this.checkBoxDns.Checked;
+            frmMain.enableMedia = this.checkBoxMedia.Checked;
+            frmMain.enableReg = this.checkBoxReg.Checked;
+            frmMain.enableSync = this.checkBoxSync.Checked;
+            frmMain.enableTCP = this.checkBoxTCP.Checked;
 
             //disable stuff
             this.textBoxPasswd.Enabled = false;

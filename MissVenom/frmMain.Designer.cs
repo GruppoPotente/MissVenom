@@ -1,6 +1,6 @@
 ﻿namespace MissVenom
 {
-    partial class Form1
+    partial class frmMain
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.textBoxOutput = new System.Windows.Forms.TextBox();
             this.checkBoxDns = new System.Windows.Forms.CheckBox();
             this.checkBoxTCP = new System.Windows.Forms.CheckBox();
