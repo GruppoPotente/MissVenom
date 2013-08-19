@@ -20,7 +20,7 @@ namespace MissVenom
             WindowsPrincipal pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
             bool hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
 
-            if (!hasAdministrativeRight)
+            if (!IsMonoRuntime() && !hasAdministrativeRight)
             {
                 RunElevated(Application.ExecutablePath);
                 Application.Exit();
@@ -35,6 +35,11 @@ namespace MissVenom
                 Context c = new Context();
                 c.Run();
             }
+        }
+
+        private static bool IsMonoRuntime()
+        {
+            return Type.GetType("Mono.Runtime") != null;
         }
 
         private static bool RunElevated(string fileName)

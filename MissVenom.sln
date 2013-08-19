@@ -13,6 +13,9 @@ Global
 		{30AE5B75-AE56-4D28-A6C7-320CFAB1796E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30AE5B75-AE56-4D28-A6C7-320CFAB1796E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = MissVenom\MissVenom.csproj
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
