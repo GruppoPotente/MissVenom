@@ -12,15 +12,14 @@ namespace MissVenom
 {
     public partial class frmIpPick : Form
     {
-        private string[] _ipAddresses;
+        public string[] IpAddresses { get; set; }
 
-        public frmIpPick(string[] ipAddresses)
+        public frmIpPick()
         {
             InitializeComponent();
-            if (ipAddresses != null && ipAddresses.Any())
+            if (IpAddresses != null && IpAddresses.Any())
             {
-                _ipAddresses = ipAddresses;
-                var bindableIp = (from ip in _ipAddresses select new { Ip = ip.ToString() }).ToList();
+                var bindableIp = (from ip in IpAddresses select new { Address = ip }).ToList();
                 grdIp.DataSource = bindableIp;
                 grdIp.Refresh();
             }
@@ -28,7 +27,7 @@ namespace MissVenom
 
         public string SelectedIP()
         {
-            return _ipAddresses[grdIp.CurrentRow.Index];
+            return IpAddresses[grdIp.CurrentRow.Index];
         }
 
         private void btnSelect_Click(object sender, EventArgs e)
