@@ -360,7 +360,6 @@ namespace MissVenom
         private void StartVenom()
         {
             //do stuff
-            this.targetIP = GetIP().ToString();
             if (String.IsNullOrEmpty(this.targetIP))
             {
                 this.AddListItem("DNS ERROR: Could not find your local IP address");
@@ -399,21 +398,6 @@ namespace MissVenom
             }
             this.AddListItem(" ");
 
-            string[] ips = GetAllIPs();
-            if (ips.Length > 1)
-            {
-                this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
-                frmIpPick frmIpPick = new frmIpPick();
-                frmIpPick.IpAddresses = ips;
-                frmIpPick.RefreshIpList();
-                var dlgResult = frmIpPick.ShowDialog();
-
-                if (dlgResult == System.Windows.Forms.DialogResult.OK)
-                    targetIP = frmIpPick.SelectedIP();
-                else
-                    this.AddListItem(String.Format("No IP selectioned, An IP must be selected when multiple IP addresses are found, selecting default {0}", targetIP));
-            }
-
             if (frmMain.enableARP)
             {
                 //start ARP spoofing
@@ -428,7 +412,7 @@ namespace MissVenom
                 tcpr.Start();
             }
 
-            this.AddListItem(String.Format("Set your DNS address on your phone to {0} (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate", targetIP));
+            this.AddListItem(String.Format("Set your DNS address on your phone to {0} (Settings->WiFi->Static IP->DNS) and go to https://cert.whatsapp.net in your phone's browser to install the root certificate", this.targetIP));
         }
 
         private void StartTcpRelay()
@@ -634,6 +618,36 @@ namespace MissVenom
 
         private void buttonStart_Click(object sender, EventArgs e)
         {
+            //process IPs
+            string[] ips = GetAllIPs();
+            if (ips.Length > 1)
+            {
+                this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
+                frmIpPick frmIpPick = new frmIpPick();
+                frmIpPick.IpAddresses = ips;
+                frmIpPick.RefreshIpList();
+                var dlgResult = frmIpPick.ShowDialog();
+
+                if (dlgResult == System.Windows.Forms.DialogResult.OK)
+                {
+                    this.targetIP = frmIpPick.SelectedIP();
+                }
+                else
+                {
+                    return;//user exited dialog, do nothing
+                }
+            }
+            else if (ips.Length == 1)
+            {
+                this.targetIP = ips[0];
+            }
+            else
+            {
+                this.AddListItem("ERROR: No local IP addresses found. Make sure you're connected to a network!");
+                return;
+            }
+
+
             //process stuff
             this.buttonStart.Enabled = false;
             if (!String.IsNullOrEmpty(this.textBoxPasswd.Text))
