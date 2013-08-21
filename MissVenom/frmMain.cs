@@ -405,6 +405,7 @@ namespace MissVenom
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
                 frmIpPick frmIpPick = new frmIpPick();
                 frmIpPick.IpAddresses = ips;
+                frmIpPick.RefreshIpList();
                 var dlgResult = frmIpPick.ShowDialog();
 
                 if (dlgResult == System.Windows.Forms.DialogResult.OK)

@@ -17,6 +17,10 @@ namespace MissVenom
         public frmIpPick()
         {
             InitializeComponent();
+        }
+
+        public void RefreshIpList()
+        {
             if (IpAddresses != null && IpAddresses.Any())
             {
                 var bindableIp = (from ip in IpAddresses select new { Address = ip }).ToList();
@@ -32,7 +36,7 @@ namespace MissVenom
 
         private void btnSelect_Click(object sender, EventArgs e)
         {
-            if (grdIp.SelectedRows != null && grdIp.SelectedRows.Count == 1)
+            if (grdIp.CurrentRow != null)
                 DialogResult = System.Windows.Forms.DialogResult.OK;
             else
                 DialogResult = System.Windows.Forms.DialogResult.Abort;
