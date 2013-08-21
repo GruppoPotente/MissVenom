@@ -23,23 +23,19 @@ namespace MissVenom
         {
             if (IpAddresses != null && IpAddresses.Any())
             {
-                var bindableIp = (from ip in IpAddresses select new { Address = ip }).ToList();
-                grdIp.DataSource = bindableIp;
-                grdIp.Refresh();
+                //var bindableIp = (from ip in IpAddresses select new { Address = ip }).ToList();
+                this.lbIpAddresses.DataSource = this.IpAddresses;
             }
         }
 
         public string SelectedIP()
         {
-            return IpAddresses[grdIp.CurrentRow.Index];
+            return IpAddresses[this.lbIpAddresses.SelectedIndex];
         }
 
-        private void btnSelect_Click(object sender, EventArgs e)
+        private void lbIpAddresses_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (grdIp.CurrentRow != null)
-                DialogResult = System.Windows.Forms.DialogResult.OK;
-            else
-                DialogResult = System.Windows.Forms.DialogResult.Abort;
+            this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
     }
 }

@@ -29,59 +29,53 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmIpPick));
-            this.btnSelect = new System.Windows.Forms.Button();
-            this.grdIp = new System.Windows.Forms.DataGridView();
             this.label1 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.grdIp)).BeginInit();
+            this.lbIpAddresses = new System.Windows.Forms.ListBox();
             this.SuspendLayout();
-            // 
-            // btnSelect
-            // 
-            this.btnSelect.Location = new System.Drawing.Point(94, 198);
-            this.btnSelect.Name = "btnSelect";
-            this.btnSelect.Size = new System.Drawing.Size(75, 23);
-            this.btnSelect.TabIndex = 0;
-            this.btnSelect.Text = "Select";
-            this.btnSelect.UseVisualStyleBackColor = true;
-            this.btnSelect.Click += new System.EventHandler(this.btnSelect_Click);
-            // 
-            // grdIp
-            // 
-            this.grdIp.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.grdIp.Dock = System.Windows.Forms.DockStyle.Top;
-            this.grdIp.Location = new System.Drawing.Point(0, 0);
-            this.grdIp.Name = "grdIp";
-            this.grdIp.Size = new System.Drawing.Size(284, 150);
-            this.grdIp.TabIndex = 1;
             // 
             // label1
             // 
-            this.label1.Location = new System.Drawing.Point(12, 162);
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label1.Location = new System.Drawing.Point(12, 109);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(260, 33);
+            this.label1.Size = new System.Drawing.Size(120, 46);
             this.label1.TabIndex = 2;
-            this.label1.Text = "Select one IP from the above list to be the IP that the service will listen";
+            this.label1.Text = "Select the IP address to use with MissVenom. Double click to select.\r\n";
+            // 
+            // lbIpAddresses
+            // 
+            this.lbIpAddresses.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbIpAddresses.FormattingEnabled = true;
+            this.lbIpAddresses.Location = new System.Drawing.Point(15, 13);
+            this.lbIpAddresses.Name = "lbIpAddresses";
+            this.lbIpAddresses.ScrollAlwaysVisible = true;
+            this.lbIpAddresses.Size = new System.Drawing.Size(114, 82);
+            this.lbIpAddresses.TabIndex = 3;
+            this.lbIpAddresses.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lbIpAddresses_MouseDoubleClick);
             // 
             // frmIpPick
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 235);
+            this.ClientSize = new System.Drawing.Size(141, 164);
+            this.Controls.Add(this.lbIpAddresses);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.grdIp);
-            this.Controls.Add(this.btnSelect);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "frmIpPick";
-            this.Text = "IP\'s";
-            ((System.ComponentModel.ISupportInitialize)(this.grdIp)).EndInit();
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
+            this.Text = "IP addresses";
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button btnSelect;
-        private System.Windows.Forms.DataGridView grdIp;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ListBox lbIpAddresses;
     }
 }
