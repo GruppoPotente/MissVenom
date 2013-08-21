@@ -399,7 +399,7 @@ namespace MissVenom
             }
             this.AddListItem(" ");
 
-            string[] ips = this.GetAllIPs();
+            string[] ips = GetAllIPs();
             if (ips.Length > 1)
             {
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
