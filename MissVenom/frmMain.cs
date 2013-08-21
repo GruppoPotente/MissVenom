@@ -403,6 +403,14 @@ namespace MissVenom
             if (ips.Length > 1)
             {
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
+                frmIpPick frmIpPick = new frmIpPick(ips);
+                var dlgResult = frmIpPick.ShowDialog();
+
+                if (dlgResult == System.Windows.Forms.DialogResult.OK)
+                    targetIP = frmIpPick.SelectedIP();
+                else
+                    throw new Exception("An IP must be selected when multiple IP addresses are found");
+
             }
 
             if (frmMain.enableARP)
