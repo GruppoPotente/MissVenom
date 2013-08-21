@@ -399,10 +399,19 @@ namespace MissVenom
             }
             this.AddListItem(" ");
 
-            string[] ips = this.GetAllIPs();
+            string[] ips = GetAllIPs();
             if (ips.Length > 1)
             {
                 this.AddListItem(String.Format("WARNING: Multiple IP addresses found: {0}", String.Join(" ,", ips)));
+                frmIpPick frmIpPick = new frmIpPick();
+                frmIpPick.IpAddresses = ips;
+                frmIpPick.RefreshIpList();
+                var dlgResult = frmIpPick.ShowDialog();
+
+                if (dlgResult == System.Windows.Forms.DialogResult.OK)
+                    targetIP = frmIpPick.SelectedIP();
+                else
+                    this.AddListItem(String.Format("No IP selectioned, An IP must be selected when multiple IP addresses are found, selecting default {0}", targetIP));
             }
 
             if (frmMain.enableARP)

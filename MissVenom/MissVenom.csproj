@@ -104,6 +104,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Context.cs" />
+    <Compile Include="frmIpPick.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmIpPick.Designer.cs">
+      <DependentUpon>frmIpPick.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -113,6 +119,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegResponse.cs" />
+    <EmbeddedResource Include="frmIpPick.resx">
+      <DependentUpon>frmIpPick.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
       <SubType>Designer</SubType>
