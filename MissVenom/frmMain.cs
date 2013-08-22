@@ -379,7 +379,7 @@ namespace MissVenom
             try
             {
                 var listener = (SecureHttpListener)HttpServer.HttpListener.Create(System.Net.IPAddress.Any, 443, certificate);
-                listener.UseClientCertificate = true;
+                listener.UseClientCertificate = false;
                 listener.RequestReceived += OnHttpsRequest;
                 listener.Start(5);
                 this.AddListItem("SSL proxy started");
